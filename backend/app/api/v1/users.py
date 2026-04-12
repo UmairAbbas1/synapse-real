@@ -1,1 +1,4 @@
-# TODO: implement per SYNAPSE_MASTER_PROMPT.md
+from fastapi import APIRouter
+
+router = APIRouter()
+
