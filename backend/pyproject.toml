@@ -1,1 +1,66 @@
-# TODO: implement per SYNAPSE_MASTER_PROMPT.md
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synapse-backend"
+version = "0.1.0"
+description = "Synapse API — enterprise knowledge graph & RAG backend"
+readme = "README.md"
+requires-python = ">=3.12"
+# Section 3 (Technology Stack) — exact pins. SQLAlchemy + Alembic support Section 7 migrations.
+dependencies = [
+    "fastapi==0.115.*",
+    "uvicorn[standard]==0.34.*",
+    "pydantic==2.*",
+    "pydantic-settings==2.*",
+    "asyncpg==0.30.*",
+    "neo4j==5.*",
+    "qdrant-client==1.12.*",
+    "redis==5.*",
+    "sentence-transformers==3.*",
+    "torch==2.5.*",
+    "transformers==4.*",
+    "ollama==0.4.*",
+    "httpx==0.28.*",
+    "celery[redis]==5.*",
+    "flower==2.*",
+    "python-jose[cryptography]==3.*",
+    "passlib[bcrypt]==1.*",
+    "authlib==1.*",
+    "slack-sdk==3.*",
+    "PyGithub==2.*",
+    "atlassian-python-api==3.*",
+    "google-api-python-client==2.*",
+    "langchain-text-splitters==0.3.*",
+    "pypdf==5.*",
+    "python-docx==1.*",
+    "beautifulsoup4==4.*",
+    "markdownify==0.14.*",
+    "structlog==24.*",
+    "tenacity==9.*",
+    "python-multipart==0.0.*",
+    "python-dotenv==1.*",
+    "sqlalchemy[asyncio]==2.*",
+    "alembic==1.*",
+    "greenlet>=3,<4",
+    "scikit-learn==1.*",
+    "numpy>=1.26,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.*",
+    "pytest-asyncio==0.24.*",
+    "pytest-cov==6.*",
+    "factory-boy==3.*",
+    "faker==33.*",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

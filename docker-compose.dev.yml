@@ -1,1 +1,79 @@
-# TODO: implement per SYNAPSE_MASTER_PROMPT.md
+# Local development: hot reload, DEBUG, host ports, no nginx.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+version: "3.9"
+
+services:
+  synapse-api:
+    env_file:
+      - ./backend/.env.dev
+    environment:
+      DEBUG: "true"
+    volumes:
+      - ./backend:/app
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ]
+
+  synapse-frontend:
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - WATCHPACK_POLLING="true"
+      - NEXT_TELEMETRY_DISABLED="1"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+      - frontend_next:/app/.next
+    command: ["sh", "-c", "npm install && npm run dev"]
+
+  synapse-worker:
+    env_file:
+      - ./backend/.env.dev
+    volumes:
+      - ./backend:/app
+
+  synapse-beat:
+    env_file:
+      - ./backend/.env.dev
+    volumes:
+      - ./backend:/app
+
+  flower:
+    env_file:
+      - ./backend/.env.dev
+    volumes:
+      - ./backend:/app
+    ports:
+      - "5555:5555"
+
+  qdrant:
+    ports:
+      - "6333:6333"
+
+  neo4j:
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  ollama:
+    ports:
+      - "11434:11434"
+
+volumes:
+  frontend_node_modules:
+  frontend_next:

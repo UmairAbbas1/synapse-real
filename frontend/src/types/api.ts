@@ -1,1 +1,2 @@
-// TODO: implement per SYNAPSE_MASTER_PROMPT.md
+/** Scaffold — expand per SYNAPSE_MASTER_PROMPT. */
+export {};

@@ -1,1 +1,6 @@
-/* TODO: implement per SYNAPSE_MASTER_PROMPT.md */
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};

@@ -1,1 +1,17 @@
-// TODO: implement per SYNAPSE_MASTER_PROMPT.md
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "Synapse",
+  description: "Enterprise knowledge graph and AI assistant",
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}

@@ -1,1 +1,6 @@
-// TODO: implement per SYNAPSE_MASTER_PROMPT.md
+/** Scaffold — replace with full implementation (SYNAPSE_MASTER_PROMPT). */
+import type { ReactNode } from "react";
+
+export default function CommandPalette(): ReactNode {
+  return null;
+}
