@@ -1,22 +1,24 @@
-from typing import Optional, Dict, Any, List
-from datetime import datetime
 from pydantic import BaseModel, ConfigDict
+from datetime import datetime
+from typing import Optional, Dict
 
-class SourceCreate(BaseModel):
+class SourceBase(BaseModel):
     name: str
     source_type: str
-    config: Dict[str, Any]
-    default_permission_tags: List[str]
-    sync_schedule: str
+    config: Dict
+    default_permission_tags: list[str] = []
 
-class SourceResponse(BaseModel):
-    id: str
-    name: str
-    source_type: str
-    status: str
-    last_sync_at: Optional[datetime] = None
-    documents_count: int
-    chunks_count: int
-    created_at: datetime
+class SourceCreate(SourceBase):
+    pass
 
+class SourceUpdate(BaseModel):
+    name: Optional[str] = None
+    config: Optional[Dict] = None
+
+class SourceResponse(SourceBase):
     model_config = ConfigDict(from_attributes=True)
+    id: str
+    status: str
+    created_by: str
+    created_at: datetime
+    updated_at: datetime
