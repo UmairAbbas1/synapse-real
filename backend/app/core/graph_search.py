@@ -1,24 +1,32 @@
-"""Neo4j graph enrichment for RAG context (Section 8)."""
+"""Knowledge Graph search and ingestion operations."""
 
 from __future__ import annotations
 
+import structlog
+from typing import Any
 from neo4j import AsyncDriver
+
+from app.connectors.base import RawDocument
+
+logger = structlog.get_logger(__name__)
 
 
 class GraphSearchService:
-    def __init__(self, driver: AsyncDriver) -> None:
+    def __init__(self, driver: AsyncDriver):
         self.driver = driver
 
     async def enrich(
         self,
         chunk_sources: list[str],
         query_text: str,
-    ) -> list[dict[str, object]]:
+    ) -> list[dict[str, Any]]:
         """
         Given retrieved chunks, find related entities in the knowledge graph.
         Returns related tickets, projects, and authors for context enrichment.
         """
-        _ = query_text
+        if not chunk_sources:
+            return []
+
         async with self.driver.session() as session:
             result = await session.run(
                 """
@@ -34,7 +42,82 @@ class GraphSearchService:
                 """,
                 source_urls=chunk_sources,
             )
-            rows: list[dict[str, object]] = []
-            async for record in result:
-                rows.append(record.data())
-            return rows
+            
+            enrichment_data = [record.data() async for record in result]
+            logger.info("graph_enrichment_complete", nodes_enriched=len(enrichment_data))
+            return enrichment_data
+
+    async def update_graph(self, doc: RawDocument) -> None:
+        """
+        Update the Neo4j graph with new documents, linking people and projects.
+        """
+        async with self.driver.session() as session:
+            projects = doc.metadata.get("projects", []) if hasattr(doc, "metadata") and doc.metadata else []
+            valid_projects = [p for p in projects if isinstance(p, str) and p.strip()]
+            
+            await session.run(
+                """
+                // 1. Merge the Document
+                MERGE (d:Document {source_url: $source_url})
+                ON CREATE SET 
+                    d.doc_id = $doc_id,
+                    d.title = $title,
+                    d.source_type = $source_type,
+                    d.created_at = $created_at,
+                    d.updated_at = $updated_at
+                ON MATCH SET
+                    d.title = $title,
+                    d.updated_at = $updated_at
+                    
+                // 2. Merge the Author (Person) and link them
+                WITH d
+                MERGE (p:Person {email: $author_email})
+                ON CREATE SET p.name = $author_name
+                MERGE (p)-[:AUTHORED]->(d)
+                
+                // 3. Document mentions Projects (from metadata)
+                FOREACH (proj_name IN $projects |
+                   MERGE (proj:Project {name: proj_name})
+                   MERGE (d)-[:MENTIONS]->(proj)
+                )
+                """,
+                source_url=doc.source_url,
+                doc_id=doc.source_id,
+                title=doc.title,
+                source_type=doc.source_type,
+                created_at=doc.created_at,
+                updated_at=doc.updated_at,
+                author_email=doc.author_email,
+                author_name=doc.author_name,
+                projects=valid_projects,
+            )
+            logger.info("graph_update_complete", doc_title=doc.title)
+
+    async def find_experts_for_topics(self, keywords: list[str]) -> list[dict[str, Any]]:
+        """
+        Uses the fulltext index 'document_content' to find ranked experts.
+        """
+        if not keywords:
+            return []
+            
+        async with self.driver.session() as session:
+            result = await session.run(
+                """
+                UNWIND $keywords AS keyword
+                CALL db.index.fulltext.queryNodes('document_content', keyword)
+                YIELD node AS doc, score
+                WITH doc, score
+                MATCH (p:Person)-[:AUTHORED]->(doc)
+                WITH p, count(doc) AS relevance, sum(score) AS total_score
+                ORDER BY relevance DESC, total_score DESC
+                RETURN p.name AS name,
+                       p.email AS email,
+                       p.title AS job_title,
+                       relevance AS relevance_score
+                """,
+                keywords=keywords,
+            )
+            
+            experts = [record.data() async for record in result]
+            logger.info("experts_search_complete", experts_found=len(experts))
+            return experts
