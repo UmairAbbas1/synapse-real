@@ -1,0 +1,60 @@
+# SYNAPSE — Project Rules for AI Agent
+
+## Project
+Synapse is a self-hosted enterprise AI assistant with RAG pipeline.
+Full specification: docs/prompts/SYNAPSE_MASTER_PROMPT.md
+ALWAYS read the relevant section of that file before implementing anything.
+
+## Stack
+- Backend: FastAPI (Python 3.12+), async everywhere
+- Frontend: Next.js 14 (App Router), TypeScript strict mode
+- Vector DB: Qdrant (HNSW, RBAC payload filtering)
+- Graph DB: Neo4j 5 (Cypher)
+- Relational DB: PostgreSQL 16 (via SQLAlchemy + Alembic)
+- LLM: Ollama (local, Llama 3 8B)
+- Embeddings: Sentence-Transformers (all-MiniLM-L6-v2, 768 dim)
+- Task Queue: Celery + Redis
+- Containers: Docker Compose
+
+## Backend Rules (MUST follow)
+- Every function has type hints. No `Any`.
+- Every endpoint has Pydantic request + response schema.
+- Every DB query is parameterized. NEVER f-strings for SQL.
+- NEVER use print(). Use structlog for ALL logging.
+- NEVER hardcode secrets. Use Pydantic Settings + env vars.
+- ALL external calls have timeouts + retries (tenacity).
+- Follow PEP-8. Max line length 100.
+- Use FastAPI Depends() for dependency injection.
+- ALL list endpoints support pagination.
+- Use Alembic for ALL schema changes.
+
+## Frontend Rules (MUST follow)
+- TypeScript strict mode. NO `any` type. Ever.
+- ALL components handle 3 states: loading, error, success.
+- NEVER inline styles. Use Tailwind + CSS variables.
+- Dark mode is DEFAULT. Light mode secondary.
+- Self-host ALL fonts. No external CDNs.
+- Use framer-motion for animations.
+- Semantic HTML (main, nav, article). No div soup.
+
+## UI Design Rules (CRITICAL — not negotiable)
+- Font: General Sans (display) + JetBrains Mono (code)
+- DO NOT use: Inter, Roboto, Arial, system fonts
+- DO NOT use: purple/blue gradients, rounded cards with shadows everywhere
+- DO NOT use: generic AI-generated aesthetics
+- Color: Dark charcoal (#0A0A0F) + electric cyan accent (#00E5CC)
+- Cards: 1px border, 12px radius, NO drop shadow in dark mode
+- Buttons: 6px radius, bold text, glow hover on primary
+- Inputs: bottom-border style, accent color on focus
+
+## Error Handling
+- Custom exception hierarchy (SynapseError base class)
+- Global exception handler catches all + returns structured JSON
+- NEVER expose raw exceptions to client
+- Request ID on every response for tracing
+
+## File Structure
+See Section 4 of docs/prompts/SYNAPSE_MASTER_PROMPT.md
+
+## Build Order
+Follow the 60-step plan in Section 20. Work ONE step at a time.
