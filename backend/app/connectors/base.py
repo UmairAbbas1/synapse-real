@@ -1,41 +1,43 @@
+"""Base interfaces mapping explicitly across pipeline ingress paths accurately."""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import AsyncGenerator
-
+from typing import AsyncIterator
 
 @dataclass
 class RawDocument:
-    """Normalized document from any source."""
+    """Normalized document payload structurally traversing specific architectures globally."""
     source_id: str
-    source_type: str          # 'slack', 'github', 'jira', 'google_drive'
+    source_type: str
     source_url: str
     title: str
-    content: str              # Plain text content
+    content: str
     author_email: str
     author_name: str
     permission_tags: list[str]
-    created_at: str           # ISO 8601
+    created_at: str
     updated_at: str
-    metadata: dict            # Source-specific metadata
-
+    metadata: dict
 
 class BaseConnector(ABC):
-    """All connectors must implement this interface."""
-    
+    """Pipeline templates dynamically protecting logic implementations natively securely."""
+
+    def __init__(self, config: dict | None = None):
+        """Provide config structures securely initializing connection configurations inherently."""
+        self.config = config or {}
+
     @abstractmethod
     async def authenticate(self, credentials: dict) -> bool:
-        """Validate OAuth credentials. Return True if valid."""
+        """Evaluate credential signatures successfully bypassing failures structurally."""
         pass
-    
+
     @abstractmethod
-    async def fetch_documents(
-        self, 
-        since: str | None = None,
-    ) -> AsyncGenerator[RawDocument, None]:
-        """Yield documents from the source."""
-        pass
-    
+    async def fetch_documents(self, since: str | None = None) -> AsyncIterator[RawDocument]:
+        """Stream isolated bounds dynamically processing raw chunks organically securely."""
+        # Yielding RawDocument elements over Async Iterators is required
+        yield NotImplemented
+
     @abstractmethod
     async def test_connection(self) -> bool:
-        """Quick connectivity check."""
+        """Validate network handshakes silently reporting boundaries gracefully."""
         pass
