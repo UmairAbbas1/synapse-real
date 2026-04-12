@@ -1,26 +1,35 @@
-from typing import Optional
-from datetime import datetime
+"""Core user schema parameters strictly mapping validations flawlessly."""
+
 from pydantic import BaseModel, ConfigDict
+from datetime import datetime
+from typing import Optional
 
-class UserCreate(BaseModel):
+class UserBase(BaseModel):
     email: str
-    display_name: str
-    role_id: str
-    password: str
-
-class UserUpdate(BaseModel):
-    display_name: Optional[str] = None
-    avatar_url: Optional[str] = None
-    is_active: Optional[bool] = None
-
-class UserResponse(BaseModel):
-    id: str
-    email: str
-    display_name: str
-    avatar_url: Optional[str] = None
-    role_id: str
+    first_name: str
+    last_name: str
     is_active: bool
-    last_login_at: Optional[datetime] = None
-    created_at: datetime
 
+class RoleBase(BaseModel):
+    name: str
+    description: str
+    permissions: list[str]
+
+class RoleCreate(RoleBase):
+    pass
+
+class RoleUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    permissions: Optional[list[str]] = None
+
+class RoleResponse(RoleBase):
     model_config = ConfigDict(from_attributes=True)
+    id: str
+
+class UserResponse(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    role_id: str
+    created_at: datetime
+    updated_at: datetime
