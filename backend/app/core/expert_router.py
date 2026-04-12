@@ -1,27 +1,47 @@
-"""Expert routing when retrieval confidence is low (Section 8)."""
+"""Expert Routing via Knowledge Graph."""
 
 from __future__ import annotations
 
-import numpy as np
-from neo4j import AsyncDriver
+import structlog
 from sklearn.feature_extraction.text import TfidfVectorizer
+from neo4j import AsyncDriver
 
 from app.schemas.query import ExpertSuggestion
 
+logger = structlog.get_logger(__name__)
+
 
 class ExpertRouter:
-    def __init__(self, neo4j_driver: AsyncDriver) -> None:
+    def __init__(self, neo4j_driver: AsyncDriver):
         self.driver = neo4j_driver
 
+    def _extract_keywords(self, text: str, top_n: int = 3) -> list[str]:
+        """Extract main keywords using TF-IDF, handling short sequences gracefully."""
+        if not text or not text.strip():
+            return []
+            
+        try:
+            vectorizer = TfidfVectorizer(stop_words='english')
+            tfidf_matrix = vectorizer.fit_transform([text])
+            feature_names = vectorizer.get_feature_names_out()
+            scores = tfidf_matrix.toarray()[0]
+            
+            # Combine names and scores, sort by descending score
+            scored_words = sorted(zip(feature_names, scores), key=lambda x: x[1], reverse=True)
+            return [word for word, score in scored_words[:top_n]]
+        except ValueError:
+            # Fallback for very short texts or stop-words only sequences
+            words = [w.strip(".,!?()[]{}'\"").lower() for w in text.split()]
+            return words[:top_n]
+
     async def find_expert(self, query: str) -> ExpertSuggestion | None:
-        """
-        When similarity score < 0.65, find the Person most connected
-        to the query topic via TF-IDF keyword extraction + graph traversal.
-        """
+        """Query knowledge graph for experts handling specific topics accurately."""
         keywords = self._extract_keywords(query, top_n=3)
         if not keywords:
             return None
-
+            
+        logger.info("expert_router_extracted_keywords", keywords=keywords)
+        
         async with self.driver.session() as session:
             result = await session.run(
                 """
@@ -36,28 +56,22 @@ class ExpertRouter:
                 RETURN p.name AS name,
                        p.email AS email,
                        p.title AS job_title,
-                       relevance
+                       relevance AS relevance_score
                 """,
                 keywords=keywords,
             )
+            
             record = await result.single()
-
-        if record is None:
-            return None
-
-        rel = record["relevance"]
-        return ExpertSuggestion(
-            name=str(record["name"]),
-            email=str(record["email"]),
-            job_title=str(record["job_title"]),
-            relevance_score=int(rel) if rel is not None else 0,
-        )
-
-    def _extract_keywords(self, text: str, top_n: int = 3) -> list[str]:
-        """Simple keyword extraction using TF-IDF weighting."""
-        vectorizer = TfidfVectorizer(stop_words="english", max_features=top_n)
-        tfidf = vectorizer.fit_transform([text])
-        feature_names = vectorizer.get_feature_names_out()
-        scores = tfidf.toarray()[0]
-        top_indices = np.argsort(scores)[::-1][:top_n]
-        return [str(feature_names[i]) for i in top_indices if scores[i] > 0]
+            if not record:
+                logger.info("expert_search_no_results", query=query)
+                return None
+                
+            expert = ExpertSuggestion(
+                name=record["name"],
+                email=record["email"],
+                job_title=record["job_title"] or "Subject Matter Expert",
+                relevance_score=float(record["relevance_score"])
+            )
+            
+            logger.info("expert_search_success", expert_name=expert.name)
+            return expert
