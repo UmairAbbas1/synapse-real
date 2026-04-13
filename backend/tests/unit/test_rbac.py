@@ -33,7 +33,9 @@ async def test_admin_accesses_everything(vector_svc, mock_client):
     """Enforce wildcard filters bypassing DB clauses flawlessly navigating logically."""
     permissions = ["*"]
     await vector_svc.search([0.1]*768, permissions)
-    assert mock_client.last_query.get("query_filter") is None
+    must_filter = mock_client.last_query.get("query_filter").must[0]
+    assert must_filter.key == "permission_tags"
+    assert set(must_filter.match.any) == {"*"}
 
 @pytest.mark.asyncio
 async def test_matching_tag_grants_access(vector_svc, mock_client):

@@ -26,20 +26,19 @@ class DummySentenceTransformer:
             vectors = vectors / norms
             
         if is_single:
-            return vectors[0].tolist()
-        return vectors.tolist()
+            return vectors[0]  # Return numpy array, not list
+        return vectors
 
-
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def setup_dummy_model():
+    app.core.embedding._model = None
     with patch("app.core.embedding.SentenceTransformer", DummySentenceTransformer):
         app.core.embedding.load_embedding_model()
         yield
         app.core.embedding._model = None
 
-
 @pytest.fixture
-def embedding_svc(setup_dummy_model) -> EmbeddingService:
+def embedding_svc() -> EmbeddingService:
     return EmbeddingService()
 
 
