@@ -2,11 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'General Sans';
+  src: url('/fonts/GeneralSans-Variable.woff2') format('woff2');
+  font-weight: 200 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2');
+  font-weight: 100 800;
+  font-display: swap;
+  font-style: normal;
+}
+
 :root {
-  color-scheme: dark;
+  /* Backgrounds */
+  --bg-primary: #0A0A0F;
+  --bg-secondary: #12121A;
+  --bg-elevated: #1A1A26;
+  --bg-hover: #22222E;
+  
+  /* Surfaces */
+  --surface-1: #1E1E2A;
+  --surface-2: #262636;
+  --surface-3: #2E2E40;
+  
+  /* Text */
+  --text-primary: #EEEEF0;
+  --text-secondary: #9898A6;
+  --text-tertiary: #68687A;
+  
+  /* Accent */
+  --accent-primary: #00E5CC;
+  --accent-hover: #00FFE0;
+  --accent-muted: rgba(0, 229, 204, 0.15);
+  --accent-glow: rgba(0, 229, 204, 0.4);
+  
+  /* Semantic */
+  --success: #34D399;
+  --warning: #FBBF24;
+  --error: #F87171;
+  --info: #60A5FA;
+  
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-medium: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(18, 18, 26, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 20px;
+}
+
+[data-theme="light"] {
+  --bg-primary: #FAFAF9;
+  --bg-secondary: #F5F5F0;
+  --bg-elevated: #FFFFFF;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --accent-primary: #009B8D;
 }
 
 body {
-  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'General Sans', sans-serif;
   min-height: 100vh;
+  margin: 0;
 }
