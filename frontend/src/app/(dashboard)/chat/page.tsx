@@ -1,10 +1,8 @@
 export default function ChatPage() {
   return (
-    <main className="flex flex-1 flex-col p-6">
-      <h1 className="text-xl font-semibold">Chat</h1>
-      <p className="mt-2 text-sm text-neutral-500">
-        Q&amp;A UI will connect to the FastAPI query endpoint in Phase 2.
-      </p>
-    </main>
-  );
+    <div className="flex flex-col items-center justify-center h-full text-center py-20">
+      <h1 className="text-3xl font-bold text-text-primary">Chat Interface</h1>
+      <p className="text-text-secondary mt-2">Welcome to Synapse. Start a new conversation.</p>
+    </div>
+  )
 }
