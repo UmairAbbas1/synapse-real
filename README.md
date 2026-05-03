@@ -1,6 +1,12 @@
 # Synapse
 
+Synapse is a self-hosted enterprise AI assistant that addresses a problem most growing com-
+panies face: knowledge is scattered across many tools and finding it wastes hours every week.
+Employees search through Slack threads, GitHub wikis, Jira tickets, and Google Drive files sep-
+arately, often interrupting colleagues just to ask questions whose answers already exist some-
+where in the system.
 Self-hosted enterprise knowledge graph and RAG assistant. Specification: `synapse/docs/prompts/SYNAPSE_MASTER_PROMPT.md` (or `docs/prompts/` copy in this repo).
+
 
 ## Quick start (Docker)
 
