@@ -5,8 +5,7 @@ panies face: knowledge is scattered across many tools and finding it wastes hour
 Employees search through Slack threads, GitHub wikis, Jira tickets, and Google Drive files sep-
 arately, often interrupting colleagues just to ask questions whose answers already exist some-
 where in the system.
-Self-hosted enterprise knowledge graph and RAG assistant. Specification: `synapse/docs/prompts/SYNAPSE_MASTER_PROMPT.md` (or `docs/prompts/` copy in this repo).
-
+Self-hosted enterprise knowledge graph and RAG assistant. Specification: 
 
 ## Quick start (Docker)
 
