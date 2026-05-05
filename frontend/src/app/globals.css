@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import "./cmdk.css";
 
 @font-face {
   font-family: 'General Sans';

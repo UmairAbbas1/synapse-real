@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { useChatStore, Message, Citation, Expert } from '@/stores/chatStore'
 import { post } from '@/lib/api'
+import { useAuthStore } from '@/stores/authStore'
 
 export function useQuery() {
   const { messages, addMessage, updateLastMessage, isStreaming, setStreaming } = useChatStore()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // Need token for SSE auth
+  const token = useAuthStore((state) => state.accessToken)
 
   const submitQuery = async (question: string) => {
-    if (!question.trim()) return
+    if (!question.trim() || isStreaming) return
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -19,23 +23,68 @@ export function useQuery() {
     addMessage(userMessage)
 
     const aiMessageId = crypto.randomUUID()
-    const initialAiMessage: Message = {
+    addMessage({
       id: aiMessageId,
       role: 'assistant',
       content: '',
       timestamp: new Date()
-    }
-    addMessage(initialAiMessage)
+    })
 
     setIsLoading(true)
     setError(null)
     setStreaming(true)
 
+    // Attempt SSE Streaming first
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
+    const streamUrl = `${baseURL}/query/stream?q=${encodeURIComponent(question)}&token=${token}`
+
     try {
-      // In a real SSE implementation, we'd use EventSource or fetch reader.
-      // Assuming a non-streaming POST for MVP if streaming isn't natively hooked yet,
-      // but let's simulate the stream response structure or just use standard POST.
-      
+      if (typeof window !== "undefined" && window.EventSource) {
+        const eventSource = new EventSource(streamUrl)
+        let accumulatedResponse = ""
+
+        eventSource.onmessage = (event) => {
+          setIsLoading(false) // First token arrived, stop ThinkingIndicator by marking loading false (but streaming true)
+          try {
+            const data = JSON.parse(event.data)
+
+            if (data.type === "token") {
+              accumulatedResponse += data.token
+              updateLastMessage(accumulatedResponse)
+            } else if (data.type === "done") {
+              updateLastMessage(accumulatedResponse, data.citations, data.expert || undefined)
+              eventSource.close()
+              setStreaming(false)
+            }
+          } catch (e) {
+            console.error("Error parsing SSE data", e)
+          }
+        }
+
+        eventSource.onerror = async (err) => {
+          console.error("SSE Error:", err)
+          eventSource.close()
+          
+          // If SSE fails immediately or refuses connection, fallback to standard POST
+          if (accumulatedResponse === "") {
+            await fallbackToPost(question)
+          } else {
+            setError('Stream disconnected abruptly.')
+            setStreaming(false)
+          }
+        }
+      } else {
+        // Fallback for browsers without EventSource
+        await fallbackToPost(question)
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to initialize connection.')
+      setStreaming(false)
+    }
+  }
+
+  const fallbackToPost = async (question: string) => {
+    try {
       const response = await post<{
         answer: string
         citations: Citation[]
@@ -54,8 +103,8 @@ export function useQuery() {
 
   return {
     messages,
-    isLoading,
-    isStreaming,
+    isLoading, // True until first token arrives or post finishes
+    isStreaming, // True until stream is done
     error,
     submitQuery
   }

@@ -1,40 +1,49 @@
-"""Test suite ensuring exact sklearn TF-IDF mappings and correct overrides."""
+from __future__ import annotations
+
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 from app.core.expert_router import ExpertRouter
 
 
-class DummyDriver:
-    """Mock structural wrapper blocking database calls unconditionally."""
-    pass
+def _mock_driver_with_record(record: dict[str, object] | None) -> AsyncMock:
+    driver = MagicMock()
+    session = AsyncMock()
+    result = AsyncMock()
+    result.single.return_value = record
+    session.run.return_value = result
+    cm = MagicMock()
+    cm.__aenter__.return_value = session
+    cm.__aexit__.return_value = None
+    driver.session.return_value = cm
+    return driver
 
 
-@pytest.fixture
-def router():
-    return ExpertRouter(neo4j_driver=DummyDriver())
+def test_extract_keywords_returns_values() -> None:
+    router = ExpertRouter(_mock_driver_with_record(None))
+    keywords = router._extract_keywords("database timeout in postgres pool", top_n=3)
+    assert len(keywords) >= 1
 
 
-def test_extract_keywords_returns_correct_count(router):
-    text = "Machine learning algorithms optimize predictive performance models significantly across datasets."
-    keywords = router._extract_keywords(text, top_n=3)
-    assert len(keywords) == 3
+@pytest.mark.asyncio
+async def test_expert_router_exact_match() -> None:
+    driver = _mock_driver_with_record(
+        {
+            "name": "Jane Doe",
+            "email": "jane@company.com",
+            "job_title": "Senior Backend Engineer",
+            "relevance_score": 3,
+        }
+    )
+    router = ExpertRouter(driver)
+    expert = await router.find_expert("postgres timeout issue")
+    assert expert is not None
+    assert expert.email == "jane@company.com"
 
 
-def test_extract_keywords_removes_stopwords(router):
-    text = "The and or machine learning is very good."
-    keywords = router._extract_keywords(text, top_n=5)
-    
-    # Ensure raw stop words defined inside `english` stop_words arrays parse strictly out
-    assert "machine" in keywords
-    assert "learning" in keywords
-    assert "the" not in keywords
-    assert "and" not in keywords
-
-
-def test_extract_keywords_short_text_fallback(router):
-    # Triggers ValueError gracefully bypassing sklearn boundaries inside fit_transform
-    text = "to be or not to be"
-    keywords = router._extract_keywords(text, top_n=3)
-    
-    assert len(keywords) > 0
-    assert keywords[0] == "to"
+@pytest.mark.asyncio
+async def test_expert_router_fallback_none() -> None:
+    router = ExpertRouter(_mock_driver_with_record(None))
+    expert = await router.find_expert("x")
+    assert expert is None

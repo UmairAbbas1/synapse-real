@@ -3,8 +3,13 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 class QueryRequest(BaseModel):
-    question: str = Field(..., min_length=3, max_length=2000, 
-                          description="Natural language question")
+    query: str = Field(..., min_length=3, max_length=2000, description="Natural language question")
+    stream: bool = False
+
+    @property
+    def question(self) -> str:
+        """Backward-compatible alias used by older call sites."""
+        return self.query
 
 class Citation(BaseModel):
     title: str

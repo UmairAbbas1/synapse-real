@@ -10,9 +10,18 @@ from app.api.middleware.request_id import RequestIDMiddleware
 from app.api.middleware.error_handler import global_exception_handler
 from app.db.postgres import init_db, close_db
 from app.db.qdrant import init_qdrant, close_qdrant
+from app.db.qdrant import get_qdrant_client
 from app.db.neo4j import init_neo4j, close_neo4j
+from app.db.neo4j import get_neo4j_driver
 from app.db.redis import init_redis, close_redis
+from app.core.embedding import EmbeddingService
 from app.core.embedding import load_embedding_model
+from app.core.vector_search import VectorSearchService
+from app.core.graph_search import GraphSearchService
+from app.core.llm_client import LLMClient
+from app.core.expert_router import ExpertRouter
+from app.core.prompt_builder import PromptBuilder
+from app.core.citation_builder import CitationBuilder
 
 
 @asynccontextmanager
@@ -24,6 +33,17 @@ async def lifespan(app: FastAPI):
     await init_neo4j()
     await init_redis()
     load_embedding_model()
+    app.state.embedding_svc = EmbeddingService()
+    app.state.vector_svc = VectorSearchService(get_qdrant_client())
+    app.state.graph_svc = GraphSearchService(get_neo4j_driver())
+    app.state.llm_client = LLMClient(
+        base_url=settings.OLLAMA_BASE_URL,
+        model=settings.OLLAMA_MODEL,
+        timeout=settings.OLLAMA_TIMEOUT,
+    )
+    app.state.expert_router = ExpertRouter(get_neo4j_driver())
+    app.state.prompt_builder = PromptBuilder()
+    app.state.citation_builder = CitationBuilder()
     
     yield
     

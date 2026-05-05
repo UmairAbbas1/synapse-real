@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { CommandPalette } from "@/components/ui/CommandPalette";
 
 export const metadata: Metadata = {
   title: "Synapse — Ambient Enterprise AI",
@@ -26,6 +27,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased min-h-screen bg-bg-primary text-text-primary">
         <Providers>
+          <CommandPalette />
           {children}
           <Toaster 
             position="bottom-right" 

@@ -1,0 +1,29 @@
+/* Global CmdK Styles to match our design system */
+.cmdk-list [cmdk-group-heading] {
+  padding: 8px 8px 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+.cmdk-list [cmdk-item] {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: 8px 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.1s ease;
+}
+
+.cmdk-list [cmdk-item][aria-selected="true"] {
+  background-color: var(--bg-hover);
+  color: var(--accent-primary);
+}
+
+.cmdk-list [cmdk-item][aria-selected="true"] svg {
+  color: var(--accent-primary);
+}

@@ -1,60 +1,93 @@
-# SYNAPSE — Project Rules for AI Agent
+# SYNAPSE — Cursor Agent Rules
+# DO NOT MODIFY STACK OR RULES WITHOUT EXPLICIT INSTRUCTION
 
-## Project
-Synapse is a self-hosted enterprise AI assistant with RAG pipeline.
-Full specification: docs/prompts/SYNAPSE_MASTER_PROMPT.md
-ALWAYS read the relevant section of that file before implementing anything.
+## References (read relevant section BEFORE implementing anything)
+- Full spec:      docs/prompts/SYNAPSE_MASTER_PROMPT.md
+- Active plan:    docs/prompts/SYNAPSE_FINISH_LINE.md
+- Build order:    Section 20 of SYNAPSE_MASTER_PROMPT.md (60-step plan, ONE step at a time)
+- File structure: Section 4  of SYNAPSE_MASTER_PROMPT.md
 
-## Stack
-- Backend: FastAPI (Python 3.12+), async everywhere
-- Frontend: Next.js 14 (App Router), TypeScript strict mode
-- Vector DB: Qdrant (HNSW, RBAC payload filtering)
-- Graph DB: Neo4j 5 (Cypher)
-- Relational DB: PostgreSQL 16 (via SQLAlchemy + Alembic)
-- LLM: Ollama (local, Llama 3 8B)
-- Embeddings: Sentence-Transformers (all-MiniLM-L6-v2, 768 dim)
-- Task Queue: Celery + Redis
-- Containers: Docker Compose
+---
 
-## Backend Rules (MUST follow)
-- Every function has type hints. No `Any`.
-- Every endpoint has Pydantic request + response schema.
-- Every DB query is parameterized. NEVER f-strings for SQL.
-- NEVER use print(). Use structlog for ALL logging.
-- NEVER hardcode secrets. Use Pydantic Settings + env vars.
-- ALL external calls have timeouts + retries (tenacity).
+## Stack (locked — do not substitute)
+
+| Layer        | Technology                                              |
+|--------------|---------------------------------------------------------|
+| Backend      | FastAPI 0.115+, Python 3.12, async everywhere           |
+| Vector DB    | PostgreSQL 16 + pgvector (HNSW, RBAC via SQL filter)    |
+| Graph DB     | Neo4j 5, async driver, Cypher                           |
+| Relational   | SQLAlchemy 2.0 async + Alembic migrations               |
+| Cache/Queue  | Redis 7 + Celery                                        |
+| LLM          | Ollama (Llama 3 8B, local)                              |
+| Embeddings   | sentence-transformers all-MiniLM-L6-v2, 768 dim         |
+| Frontend     | Next.js 14 App Router, TypeScript strict, Tailwind, Zustand |
+| Auth         | JWT (python-jose) + bcrypt (passlib)                    |
+| Containers   | Docker Compose                                          |
+
+---
+
+## Backend Rules (non-negotiable)
+
+- ALL functions have type hints. `Any` is forbidden.
+- ALL endpoints have Pydantic request **and** response schemas.
+- ALL DB queries are parameterized. **Never** f-string SQL.
+- RBAC enforced via SQL `WHERE permission_tag = ANY($N)` — never filtered in Python after the query.
+- **Never** use `print()`. Use `structlog` for all logging.
+- **Never** hardcode secrets. Use Pydantic `BaseSettings` + env vars.
+- ALL external calls have timeouts + tenacity retry (3 attempts, exponential backoff 2–30 s).
+- ALL list endpoints support cursor-based or offset pagination.
+- ALL async DB work uses async session/connection correctly (no sync calls in async context).
+- Schema changes go through Alembic. Never alter tables manually.
 - Follow PEP-8. Max line length 100.
-- Use FastAPI Depends() for dependency injection.
-- ALL list endpoints support pagination.
-- Use Alembic for ALL schema changes.
-
-## Frontend Rules (MUST follow)
-- TypeScript strict mode. NO `any` type. Ever.
-- ALL components handle 3 states: loading, error, success.
-- NEVER inline styles. Use Tailwind + CSS variables.
-- Dark mode is DEFAULT. Light mode secondary.
-- Self-host ALL fonts. No external CDNs.
-- Use framer-motion for animations.
-- Semantic HTML (main, nav, article). No div soup.
-
-## UI Design Rules (CRITICAL — not negotiable)
-- Font: General Sans (display) + JetBrains Mono (code)
-- DO NOT use: Inter, Roboto, Arial, system fonts
-- DO NOT use: purple/blue gradients, rounded cards with shadows everywhere
-- DO NOT use: generic AI-generated aesthetics
-- Color: Dark charcoal (#0A0A0F) + electric cyan accent (#00E5CC)
-- Cards: 1px border, 12px radius, NO drop shadow in dark mode
-- Buttons: 6px radius, bold text, glow hover on primary
-- Inputs: bottom-border style, accent color on focus
+- Use `FastAPI Depends()` for dependency injection everywhere.
 
 ## Error Handling
-- Custom exception hierarchy (SynapseError base class)
-- Global exception handler catches all + returns structured JSON
-- NEVER expose raw exceptions to client
-- Request ID on every response for tracing
 
-## File Structure
-See Section 4 of docs/prompts/SYNAPSE_MASTER_PROMPT.md
+- Custom exception hierarchy — all exceptions inherit `SynapseError`.
+- Global exception handler catches everything and returns structured JSON. Never expose raw tracebacks to the client.
+- Every response carries a `request_id` header for tracing.
 
-## Build Order
-Follow the 60-step plan in Section 20. Work ONE step at a time.
+---
+
+## Frontend Rules (non-negotiable)
+
+- TypeScript strict mode. `any` is forbidden. Period.
+- Every component handles three states: **loading**, **error**, **success**.
+- **Never** use inline styles. Tailwind utility classes + CSS variables only.
+- Dark mode is the default. Light mode is secondary.
+- Self-host all fonts. No external CDN font requests.
+- Use `framer-motion` for all animations and transitions.
+- Write semantic HTML (`<main>`, `<nav>`, `<article>`, etc.). No div soup.
+
+## UI Design (critical — do not deviate)
+
+| Token           | Value                        |
+|-----------------|------------------------------|
+| Background      | `#0A0A0F` (dark charcoal)    |
+| Accent          | `#00E5CC` (electric cyan)    |
+| Display font    | General Sans                 |
+| Code font       | JetBrains Mono               |
+| Card border     | 1 px solid, 12 px radius, no drop-shadow in dark mode |
+| Button radius   | 6 px, bold text, cyan glow on hover |
+| Input style     | Bottom-border only, accent color on focus |
+
+**Forbidden:**
+- Fonts: Inter, Roboto, Arial, system-ui, or any generic system font
+- Styles: purple/blue gradients, rounded cards with drop shadows everywhere, generic "AI dashboard" aesthetics
+
+---
+
+## Quick Reference Checklist (run before every PR)
+
+- [ ] No untyped Python, no `Any`, no `any` in TypeScript
+- [ ] No f-string SQL anywhere
+- [ ] No `print()` — structlog only
+- [ ] No hardcoded secrets
+- [ ] Pydantic schemas on every endpoint
+- [ ] Async DB calls use async session correctly
+- [ ] RBAC filter is in SQL, not Python
+- [ ] External calls have timeout + tenacity retry
+- [ ] New DB changes have an Alembic migration
+- [ ] Frontend components handle loading / error / success
+- [ ] No inline styles, no forbidden fonts
+- [ ] Exceptions inherit SynapseError, global handler returns structured JSON

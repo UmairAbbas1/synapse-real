@@ -91,13 +91,15 @@ class QueryEngine:
         
         metadata = QueryMetadata(
             top_similarity_score=top_score,
-            processing_time_ms=0.0,
-            model_used=self.llm_client.model_name
+            chunks_retrieved=len(chunks),
+            graph_nodes_used=len(graph_context),
+            model=self.llm_client.model_name,
         )
         
         return QueryResponse(
             answer=answer,
             citations=citations,
-            expert_suggestion=expert,
-            metadata=metadata
+            expert=expert,
+            is_low_confidence=is_low_confidence,
+            metadata=metadata,
         )
