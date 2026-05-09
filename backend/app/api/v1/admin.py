@@ -1,19 +1,16 @@
 """Secure Admin endpoints generating reliable metrics safely checking limits properly."""
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 
 from app.api.middleware.auth import require_role
+from app.db.postgres import get_db_session as get_db
 from app.models.audit import AuditLog
-from app.models.user import User
 from app.models.ingestion_job import IngestionJob
+from app.models.user import User
 
 router = APIRouter()
-
-def get_db():
-    from app.db.postgres import get_db as global_get_db
-    return global_get_db()
 
 @router.get("/stats", dependencies=[Depends(require_role("ADMIN"))])
 async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):

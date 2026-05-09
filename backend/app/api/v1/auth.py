@@ -1,24 +1,23 @@
 """Auth Endpoints mapping connection structures transparently avoiding bottlenecks natively."""
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
 from datetime import datetime, timedelta, timezone
-from pydantic import BaseModel
 
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.middleware.error_handler import AuthenticationError
+from app.db.postgres import get_db_session as get_db
+from app.models.session import UserSession
+from app.models.user import User
 from app.schemas.auth import LoginRequest, TokenResponse
 from app.services.auth_service import AuthService
-from app.models.user import User
-from app.models.session import UserSession
-from app.api.middleware.error_handler import AuthenticationError
 
 router = APIRouter()
 
-def get_db():
-    from app.db.postgres import get_db as get_global_db
-    return get_global_db()
 
-def get_auth_service():
+def get_auth_service() -> AuthService:
     return AuthService()
 
 class RefreshRequest(BaseModel):

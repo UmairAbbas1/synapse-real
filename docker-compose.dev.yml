@@ -53,9 +53,6 @@ services:
     ports:
       - "5555:5555"
 
-  qdrant:
-    ports:
-      - "6333:6333"
 
   neo4j:
     ports:

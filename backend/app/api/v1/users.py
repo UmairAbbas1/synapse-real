@@ -1,20 +1,18 @@
 """User API routing constraints dynamically defining local schemas correctly natively."""
 
 from fastapi import APIRouter, Depends
-from typing import Any
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.middleware.auth import require_role
-from app.services.user_service import UserService
+from app.db.postgres import get_db_session as get_db
 from app.schemas.common import PaginatedResponse
-from app.schemas.user import UserResponse, RoleResponse, RoleCreate, RoleUpdate
+from app.schemas.user import RoleCreate, RoleResponse, RoleUpdate, UserResponse
+from app.services.user_service import UserService
 
 router = APIRouter()
 
-def get_db():
-    from app.db.postgres import get_db as global_db
-    return global_db()
-    
-def get_user_service(db = Depends(get_db)):
+
+def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
     return UserService(db)
 
 @router.get("", response_model=PaginatedResponse[UserResponse])

@@ -10,13 +10,14 @@ readme = "README.md"
 requires-python = ">=3.12"
 # Section 3 (Technology Stack) — exact pins. SQLAlchemy + Alembic support Section 7 migrations.
 dependencies = [
+    "tiktoken>=0.5.0",
     "fastapi==0.115.*",
     "uvicorn[standard]==0.34.*",
     "pydantic==2.*",
     "pydantic-settings==2.*",
     "psycopg[binary,pool]>=3.0",
     "neo4j==5.*",
-    "qdrant-client==1.12.*",
+    
     "redis==5.*",
     "sentence-transformers==3.*",
     "torch>=2.9.0",
@@ -44,7 +45,7 @@ dependencies = [
     "sqlalchemy[asyncio]==2.*",
     "alembic==1.*",
     "greenlet>=3,<4",
-    "scikit-learn==1.*",
+    "scikit-learn>=1.5.0",
     "numpy>=1.26,<3",
 ]
 
@@ -64,3 +65,4 @@ include = ["app*"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+

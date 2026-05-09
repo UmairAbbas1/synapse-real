@@ -1,16 +1,12 @@
-"""FastAPI application entrypoint (full factory pattern)."""
-
+﻿"""FastAPI application entrypoint (full factory pattern)."""
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from app.config import settings
 from app.api.router import api_router
 from app.api.middleware.request_id import RequestIDMiddleware
 from app.api.middleware.error_handler import global_exception_handler
 from app.db.postgres import init_db, close_db
-from app.db.qdrant import init_qdrant, close_qdrant
-from app.db.qdrant import get_qdrant_client
 from app.db.neo4j import init_neo4j, close_neo4j
 from app.db.neo4j import get_neo4j_driver
 from app.db.redis import init_redis, close_redis
@@ -23,18 +19,15 @@ from app.core.expert_router import ExpertRouter
 from app.core.prompt_builder import PromptBuilder
 from app.core.citation_builder import CitationBuilder
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: connect all services. Shutdown: close all connections."""
-    # Startup
     await init_db()
-    await init_qdrant()
     await init_neo4j()
     await init_redis()
     load_embedding_model()
     app.state.embedding_svc = EmbeddingService()
-    app.state.vector_svc = VectorSearchService(get_qdrant_client())
+    app.state.vector_svc = VectorSearchService()
     app.state.graph_svc = GraphSearchService(get_neo4j_driver())
     app.state.llm_client = LLMClient(
         base_url=settings.OLLAMA_BASE_URL,
@@ -44,15 +37,12 @@ async def lifespan(app: FastAPI):
     app.state.expert_router = ExpertRouter(get_neo4j_driver())
     app.state.prompt_builder = PromptBuilder()
     app.state.citation_builder = CitationBuilder()
-    
+
     yield
-    
-    # Shutdown
+
     await close_db()
-    await close_qdrant()
     await close_neo4j()
     await close_redis()
-
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -63,8 +53,6 @@ def create_app() -> FastAPI:
         redoc_url="/api/redoc" if settings.DEBUG else None,
         lifespan=lifespan,
     )
-
-    # Middleware (order matters — outermost first)
     app.add_middleware(RequestIDMiddleware)
     app.add_middleware(
         CORSMiddleware,
@@ -73,14 +61,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-    # Exception handlers
     app.add_exception_handler(Exception, global_exception_handler)
-
-    # Routes
     app.include_router(api_router, prefix="/api")
-
     return app
-
 
 app = create_app()

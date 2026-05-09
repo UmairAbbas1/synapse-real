@@ -73,6 +73,8 @@ services:
       test: ["CMD", "neo4j", "status"]
       interval: 10s
 
+  
+
   postgres:
     image: postgres:16-alpine
     environment:

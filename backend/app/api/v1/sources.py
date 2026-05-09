@@ -1,22 +1,18 @@
 """Data Source routing API securely driving internal administration and external background workers."""
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.source_service import SourceService
-from app.schemas.source import SourceCreate, SourceUpdate, SourceResponse
-from app.schemas.common import PaginatedResponse
 from app.core.auth import get_current_user
-from app.workers.ingestion_tasks import ingest_source
+from app.db.postgres import get_db_session as get_db
 from app.models.ingestion_job import IngestionJob
+from app.schemas.common import PaginatedResponse
+from app.schemas.source import SourceCreate, SourceResponse, SourceUpdate
+from app.services.source_service import SourceService
+from app.workers.ingestion_tasks import ingest_source
 
 router = APIRouter()
-
-# Proxy dynamically matching core routes
-def get_db():
-    from app.db.postgres import get_db as global_db
-    return global_db()
 
 def get_source_service(db: AsyncSession = Depends(get_db)) -> SourceService:
     return SourceService(db)

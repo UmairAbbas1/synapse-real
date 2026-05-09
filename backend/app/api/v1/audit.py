@@ -1,23 +1,21 @@
 """Audit structures generating logic schemas gracefully exporting parameters tracking cleanly."""
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.middleware.auth import require_role
+from app.db.postgres import get_db_session as get_db
 from app.models.audit import AuditLog
-from app.models.user import User
 from app.models.session import UserSession
-from pydantic import BaseModel, ConfigDict
+from app.models.user import User
 from app.schemas.common import PaginatedResponse
 
 router = APIRouter()
-
-def get_db():
-    from app.db.postgres import get_db as get_global_db
-    return get_global_db()
 
 class AuditLogResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
