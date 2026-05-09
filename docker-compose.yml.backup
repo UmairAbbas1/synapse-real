@@ -2,21 +2,25 @@
 # docker-compose.prod.yml). Matches Section 15 minus nginx, restart policies,
 # and Ollama GPU reservation (those come from docker-compose.prod.yml).
 
+version: "3.9"
+
 services:
   synapse-api:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    env_file: .env
     ports:
       - "8000:8000"
     environment:
       - POSTGRES_HOST=postgres
+      - QDRANT_HOST=qdrant
       - NEO4J_URI=bolt://neo4j:7687
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
       postgres:
+        condition: service_healthy
+      qdrant:
         condition: service_healthy
       neo4j:
         condition: service_healthy
@@ -43,21 +47,30 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.worker
-    env_file: .env
     command: celery -A app.workers.celery_app worker -l info -c 4
     depends_on:
       - redis
       - postgres
+      - qdrant
       - neo4j
 
   synapse-beat:
     build:
       context: ./backend
       dockerfile: Dockerfile.worker
-    env_file: .env
     command: celery -A app.workers.celery_app beat -l info
     depends_on:
       - redis
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.1
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 10s
 
   neo4j:
     image: neo4j:5.25-community
@@ -112,6 +125,7 @@ services:
       - redis
 
 volumes:
+  qdrant_data:
   neo4j_data:
   postgres_data:
   redis_data:
