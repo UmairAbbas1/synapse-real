@@ -6,13 +6,14 @@ from sqlalchemy import select
 logger = structlog.get_logger(__name__)
 
 async def _trigger_all_syncs():
-    from app.db.postgres import async_session_maker
+    from app.db.postgres import get_async_session_factory
     from app.models.data_source import DataSource
     from app.models.ingestion_job import IngestionJob
     from app.workers.ingestion_tasks import ingest_source
     import uuid
 
-    async with async_session_maker() as session:
+    factory = get_async_session_factory()
+    async with factory() as session:
         result = await session.execute(
             select(DataSource).where(DataSource.status == "active", DataSource.is_deleted == False)
         )

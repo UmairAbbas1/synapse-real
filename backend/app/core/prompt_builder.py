@@ -1,12 +1,16 @@
 """Prompt generation service strictly aligned with master constraints."""
 
 import structlog
-import tiktoken
 from typing import Any
 
 from app.core.vector_search import RetrievedChunk
 
 logger = structlog.get_logger(__name__)
+
+try:
+    import tiktoken  # type: ignore
+except Exception:  # pragma: no cover
+    tiktoken = None
 
 
 SYSTEM_PROMPT = """You are Synapse, an internal AI assistant for {company_name}. 
@@ -47,8 +51,15 @@ indicate your uncertainty level in the response.
 
 class PromptBuilder:
     def __init__(self):
-        self.encoder = tiktoken.get_encoding("cl100k_base")
+        self.encoder = tiktoken.get_encoding("cl100k_base") if tiktoken else None
         self.max_tokens = 3000
+
+    def _count_tokens(self, text: str) -> int:
+        if self.encoder:
+            return len(self.encoder.encode(text))
+        # Fallback: approximate token count to keep prompts bounded even if
+        # optional tokenizer dependency isn't installed in the container image.
+        return max(1, len(text) // 4)
 
     def build(
         self,
@@ -88,14 +99,14 @@ class PromptBuilder:
             user_query=user_query_fin,
         )
         
-        base_tokens = len(self.encoder.encode(system_prompt)) + len(self.encoder.encode(base_user_prompt))
+        base_tokens = self._count_tokens(system_prompt) + self._count_tokens(base_user_prompt)
         available_tokens = self.max_tokens - base_tokens
         
         # Safely compile available document contexts iteratively to avoid breaking boundaries
         formatted_chunks = []
         for chunk in chunks:
             chunk_str = f"Source: {chunk.document_title} ({chunk.source_type}) by {chunk.author}\n{chunk.text}\n---"
-            chunk_tokens = len(self.encoder.encode(chunk_str))
+            chunk_tokens = self._count_tokens(chunk_str)
             
             if available_tokens - chunk_tokens > 0:
                 formatted_chunks.append(chunk_str)
@@ -110,7 +121,7 @@ class PromptBuilder:
             user_query=user_query_fin,
         )
         
-        total_tokens = len(self.encoder.encode(system_prompt)) + len(self.encoder.encode(user_prompt))
+        total_tokens = self._count_tokens(system_prompt) + self._count_tokens(user_prompt)
         
         logger.info(
             "prompt_built",

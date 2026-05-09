@@ -53,7 +53,7 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db), auth_svc:
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        expires_in=settings.SESSION_EXPIRE_HOURS * 3600,
         refresh_token=refresh_token
     )
 
@@ -62,7 +62,7 @@ async def refresh(req: RefreshRequest, db: AsyncSession = Depends(get_db), auth_
     try:
         from app.config import settings
         import jwt
-        payload = jwt.decode(req.refresh_token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        payload = jwt.decode(req.refresh_token, settings.SECRET_KEY, algorithms=["HS256"])
         if payload.get("type") != "refresh":
             raise AuthenticationError("Invalid token type.")
     except Exception:
@@ -85,7 +85,7 @@ async def refresh(req: RefreshRequest, db: AsyncSession = Depends(get_db), auth_
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        expires_in=settings.SESSION_EXPIRE_HOURS * 3600,
         refresh_token=req.refresh_token
     )
 

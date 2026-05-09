@@ -75,19 +75,4 @@ async def execute_gdpr_erasure(email: str, user = Depends(require_role("ADMIN"))
         await db.execute(delete(User).where(User.id == user_id))
         await db.commit()
         
-    try:
-        from app.db.qdrant import get_qdrant_client
-        from qdrant_client.http import models
-        client = get_qdrant_client()
-        filter_cond = models.Filter(must=[models.FieldCondition(key="author_email", match=models.MatchValue(value=email))])
-        
-        if getattr(client, "delete", None):
-            import inspect
-            if inspect.iscoroutinefunction(client.delete):
-                await client.delete(collection_name="synapse-chunks", points_selector=models.FilterSelector(filter=filter_cond))
-            else:
-                client.delete(collection_name="synapse-chunks", points_selector=models.FilterSelector(filter=filter_cond))
-                
-    except Exception as e:
-        import structlog
-        structlog.get_logger(__name__).error("gdpr_vector_wipe_failed", error=str(e), email=email)
+

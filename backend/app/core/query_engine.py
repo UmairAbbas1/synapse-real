@@ -43,7 +43,7 @@ class QueryEngine:
         # Step 2: Extract top vectors natively guarding explicitly through RBAC mappings
         try:
             chunks = await self.vector_svc.search(
-                vector=vector, 
+                query_vector=vector, 
                 permission_tags=user_permission_tags, 
                 top_k=5
             )

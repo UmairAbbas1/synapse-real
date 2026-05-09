@@ -74,9 +74,9 @@ class SourceService:
         # Fire Vector Database deletes seamlessly cascading cleanup parameters exactly explicitly
         try:
             from app.core.vector_search import VectorSearchService
-            from app.db.qdrant import get_qdrant_client
-            svc = VectorSearchService(get_qdrant_client())
+            # removed: was qdrant, now using pgvector
+            svc = VectorSearchService()
             await svc.delete_by_source(source_id)
             logger.info("data_source_deleted", source_id=str(source.id))
         except Exception as e:
-            logger.error("qdrant_cascade_delete_failed", error=str(e))
+            logger.error("vector_cascade_delete_failed", error=str(e))

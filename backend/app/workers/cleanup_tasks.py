@@ -9,16 +9,18 @@ from datetime import datetime, timedelta, timezone
 logger = structlog.get_logger(__name__)
 
 async def _cleanup_sessions():
-    from app.db.postgres import async_session_maker
-    async with async_session_maker() as session:
+    from app.db.postgres import get_async_session_factory
+    factory = get_async_session_factory()
+    async with factory() as session:
         result = await session.execute(text("DELETE FROM user_sessions WHERE expires_at < NOW()"))
         await session.commit()
         logger.info("cleanup_sessions_completed", rows_deleted=result.rowcount)
 
 async def _cleanup_audit_logs():
-    from app.db.postgres import async_session_maker
+    from app.db.postgres import get_async_session_factory
     from app.models.audit import AuditLog
-    async with async_session_maker() as session:
+    factory = get_async_session_factory()
+    async with factory() as session:
         cutoff = datetime.now(timezone.utc) - timedelta(days=90)
         stmt = delete(AuditLog).where(AuditLog.created_at < cutoff)
         result = await session.execute(stmt)

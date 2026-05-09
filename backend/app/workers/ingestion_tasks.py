@@ -21,12 +21,10 @@ logger = structlog.get_logger(__name__)
 
 # Assume internal dependency fetchers exist inherently based out of prior infrastructure routes
 def get_sync_db_session_marker():
-    from app.db.postgres import async_session_maker
-    return async_session_maker
+    from app.db.postgres import get_async_session_factory
+    return get_async_session_factory()
 
-def get_qdrant():
-    from app.db.qdrant import get_qdrant_client
-    return get_qdrant_client()
+# removed: was qdrant, now using pgvector
 
 def get_neo4j():
     from app.db.neo4j import get_neo4j_driver
@@ -67,7 +65,7 @@ async def _fail_job(job_id: str, error: str):
 async def _async_ingest_pipeline(source_id: str, job_id: str):
     load_embedding_model()
     embedding_svc = EmbeddingService()
-    vector_svc = VectorSearchService(get_qdrant())
+    vector_svc = VectorSearchService()
     graph_svc = GraphSearchService(get_neo4j())
     
     docs_processed = 0

@@ -52,6 +52,12 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Compatibility dependency alias for route imports expecting get_db."""
+    async for session in get_db_session():
+        yield session
+
+
 async def init_db() -> None:
     """Verify database connectivity at application startup."""
     eng = _ensure_engine()

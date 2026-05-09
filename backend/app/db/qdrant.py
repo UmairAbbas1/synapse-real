@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import httpx
 import structlog
-from qdrant_client import AsyncQdrantClient
+from typing import Any
+# removed: was qdrant, now using pgvector
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -16,7 +17,7 @@ from app.config import settings
 
 logger = structlog.get_logger(__name__)
 
-_client: AsyncQdrantClient | None = None
+_client: Any | None = None
 
 
 @retry(
@@ -33,23 +34,12 @@ _client: AsyncQdrantClient | None = None
     ),
     reraise=True,
 )
-async def _connect_client() -> AsyncQdrantClient:
-    """Create client and verify connectivity (retries on transport failures)."""
-    client = AsyncQdrantClient(
-        host=settings.QDRANT_HOST,
-        port=settings.QDRANT_PORT,
-    )
-    await client.get_collections()
-    logger.info(
-        "qdrant_connected",
-        host=settings.QDRANT_HOST,
-        port=settings.QDRANT_PORT,
-    )
-    return client
+async def _connect_client() -> Any:
+    return None
 
 
 async def init_qdrant() -> None:
-    """Initialize global AsyncQdrantClient at application startup."""
+    """Initialize global Any at application startup."""
     global _client
     if _client is not None:
         logger.info("qdrant_init_skip_already_initialized")
@@ -68,8 +58,8 @@ async def close_qdrant() -> None:
     logger.info("qdrant_close_complete")
 
 
-def get_qdrant_client() -> AsyncQdrantClient:
-    """Return the shared AsyncQdrantClient (must call init_qdrant() first)."""
+def get_qdrant_client() -> Any:
+    """Return the shared Any (must call init_qdrant() first)."""
     if _client is None:
         raise RuntimeError(
             "Qdrant client not initialized; call init_qdrant() during application startup",

@@ -10,11 +10,21 @@ services:
     env_file: .env
     ports:
       - "8000:8000"
+    command: ["/opt/venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--log-level", "debug"]
+    volumes:
+      - ./backend/app:/app/app
     environment:
       - POSTGRES_HOST=postgres
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
       - NEO4J_URI=bolt://neo4j:7687
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_BASE_URL=http://ollama:11434
+      - SECRET_KEY=dev-secret-key-change-in-prod-32chars-ok
+      - POSTGRES_PASSWORD=synapse_dev_pass
+      - NEO4J_PASSWORD=synapse_dev_pass
+      - FERNET_KEY=ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=
+      - DATABASE_URL=postgresql+psycopg://synapse:synapse_dev_pass@postgres:5432/synapse
     depends_on:
       postgres:
         condition: service_healthy
@@ -44,6 +54,14 @@ services:
       context: ./backend
       dockerfile: Dockerfile.worker
     env_file: .env
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - SECRET_KEY=dev-secret-key-change-in-prod-32chars-ok
+      - POSTGRES_PASSWORD=synapse_dev_pass
+      - NEO4J_PASSWORD=synapse_dev_pass
+      - FERNET_KEY=ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=
+      - DATABASE_URL=postgresql+psycopg://synapse:synapse_dev_pass@postgres:5432/synapse
     command: celery -A app.workers.celery_app worker -l info -c 4
     depends_on:
       - redis
@@ -55,6 +73,14 @@ services:
       context: ./backend
       dockerfile: Dockerfile.worker
     env_file: .env
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - SECRET_KEY=dev-secret-key-change-in-prod-32chars-ok
+      - POSTGRES_PASSWORD=synapse_dev_pass
+      - NEO4J_PASSWORD=synapse_dev_pass
+      - FERNET_KEY=ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=
+      - DATABASE_URL=postgresql+psycopg://synapse:synapse_dev_pass@postgres:5432/synapse
     command: celery -A app.workers.celery_app beat -l info
     depends_on:
       - redis

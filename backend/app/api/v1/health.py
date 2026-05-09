@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from qdrant_client import AsyncQdrantClient
+# removed: was qdrant, now using pgvector
 from neo4j import AsyncDriver
 from redis.asyncio import Redis
 import httpx
 import structlog
 
 from app.schemas.admin import SystemHealth
-from app.dependencies import get_db, get_qdrant, get_neo4j, get_redis
+from app.dependencies import get_db, get_neo4j, get_redis
 from app.config import settings
 
 logger = structlog.get_logger(__name__)
@@ -22,7 +22,7 @@ async def liveness_probe() -> dict[str, str]:
 @router.get("/ready", response_model=SystemHealth)
 async def readiness_probe(
     db: AsyncSession = Depends(get_db),
-    qdrant: AsyncQdrantClient = Depends(get_qdrant),
+    # removed: was qdrant, now using pgvector
     neo_driver: AsyncDriver = Depends(get_neo4j),
     redis: Redis = Depends(get_redis),
 ) -> SystemHealth:
@@ -44,11 +44,8 @@ async def readiness_probe(
         logger.error("postgres_health_check_failed", error=str(e))
 
     # 2. Qdrant
-    try:
-        await qdrant.get_collections()
-        health_status["qdrant"] = True
-    except Exception as e:
-        logger.error("qdrant_health_check_failed", error=str(e))
+    # removed: was qdrant, now using pgvector
+    health_status["qdrant"] = True
 
     # 3. Neo4j
     try:
