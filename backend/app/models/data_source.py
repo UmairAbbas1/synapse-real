@@ -1,6 +1,6 @@
 """SQLAlchemy ORM models defining data sources accurately tracking credentials configurations globally."""
 
-from sqlalchemy import String, JSON, Enum
+from sqlalchemy import String, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin, SoftDeleteMixin
 

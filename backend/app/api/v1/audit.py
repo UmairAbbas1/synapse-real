@@ -39,24 +39,35 @@ async def list_audit_logs(
 ):
     """Retrieve filtered metrics accurately generating logic lists tracking reliably across scopes."""
     stmt = select(AuditLog)
-    if user_id: stmt = stmt.where(AuditLog.user_id == user_id)
-    if action: stmt = stmt.where(AuditLog.action == action)
-    if resource_type: stmt = stmt.where(AuditLog.resource_type == resource_type)
-    if date_from: stmt = stmt.where(AuditLog.created_at >= date_from)
-    if date_to: stmt = stmt.where(AuditLog.created_at <= date_to)
-    
+    if user_id:
+        stmt = stmt.where(AuditLog.user_id == user_id)
+    if action:
+        stmt = stmt.where(AuditLog.action == action)
+    if resource_type:
+        stmt = stmt.where(AuditLog.resource_type == resource_type)
+    if date_from:
+        stmt = stmt.where(AuditLog.created_at >= date_from)
+    if date_to:
+        stmt = stmt.where(AuditLog.created_at <= date_to)
+
     stmt = stmt.order_by(AuditLog.created_at.desc())
     res = await db.execute(stmt.limit(limit).offset(offset))
     logs = res.scalars().all()
     
     from sqlalchemy import func
+
     count_stmt = select(func.count(AuditLog.id))
-    if user_id: count_stmt = count_stmt.where(AuditLog.user_id == user_id)
-    if action: count_stmt = count_stmt.where(AuditLog.action == action)
-    if resource_type: count_stmt = count_stmt.where(AuditLog.resource_type == resource_type)
-    if date_from: count_stmt = count_stmt.where(AuditLog.created_at >= date_from)
-    if date_to: count_stmt = count_stmt.where(AuditLog.created_at <= date_to)
-    
+    if user_id:
+        count_stmt = count_stmt.where(AuditLog.user_id == user_id)
+    if action:
+        count_stmt = count_stmt.where(AuditLog.action == action)
+    if resource_type:
+        count_stmt = count_stmt.where(AuditLog.resource_type == resource_type)
+    if date_from:
+        count_stmt = count_stmt.where(AuditLog.created_at >= date_from)
+    if date_to:
+        count_stmt = count_stmt.where(AuditLog.created_at <= date_to)
+
     total = (await db.execute(count_stmt)).scalar_one()
     return {"items": logs, "total": total, "limit": limit, "offset": offset}
 

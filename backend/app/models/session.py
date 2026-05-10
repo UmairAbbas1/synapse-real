@@ -1,7 +1,7 @@
 """SQLAlchemy models routing short-lived system tokens securely."""
 
 import uuid
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import INET, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
@@ -16,3 +16,4 @@ class UserSession(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     ip_address: Mapped[str | None] = mapped_column(INET, nullable=True)
     user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)

@@ -78,8 +78,11 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: CORSOrigins = Field(default_factory=lambda: ["http://localhost:3000"])
 
-    # Session
+    # Session (JWT + Redis session TTL)
     SESSION_EXPIRE_HOURS: int = 8
+
+    # Fernet key (url-safe base64); optional — derived from SECRET_KEY when unset.
+    FERNET_KEY: str | None = None
 
     @property
     def DATABASE_URL(self) -> str:

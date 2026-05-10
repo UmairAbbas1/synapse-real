@@ -54,7 +54,9 @@ class GraphSearchService:
         Update the Neo4j graph with new documents, linking people and projects.
         """
         async with self.driver.session() as session:
-            projects = doc.metadata.get("projects", []) if hasattr(doc, "metadata") and doc.metadata else []
+            raw_projects = doc.metadata.get("projects")
+            projects_obj: object = raw_projects if raw_projects is not None else []
+            projects = projects_obj if isinstance(projects_obj, list) else []
             valid_projects = [p for p in projects if isinstance(p, str) and p.strip()]
             
             await session.run(

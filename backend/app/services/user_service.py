@@ -1,10 +1,10 @@
 """Specific bindings validating DB variables cleanly seamlessly executing natively safely!"""
 
 import structlog
+import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import HTTPException
-from typing import Tuple
 
 from app.models.user import User
 from app.models.role import Role
@@ -25,7 +25,7 @@ class UserService:
         return {"items": res.scalars().all(), "total": count_res.scalar_one(), "limit": limit, "offset": offset}
 
     async def get_user(self, id: str) -> User:
-        user = await self.db.get(User, id)
+        user = await self.db.get(User, uuid.UUID(id))
         if not user:
             raise HTTPException(404, "User not found")
         return user
@@ -33,7 +33,7 @@ class UserService:
     async def change_role(self, id: str, role_id: str, admin_id: str) -> User:
         user = await self.get_user(id)
         old_role = user.role_id
-        user.role_id = role_id
+        user.role_id = uuid.UUID(role_id)
         await self.db.commit()
         await self.db.refresh(user)
         await self.audit.log(
@@ -71,10 +71,13 @@ class UserService:
             raise HTTPException(404, "Role not found")
             
         old_permissions = role.permissions
-        if data.name is not None: role.name = data.name
-        if data.description is not None: role.description = data.description
-        if data.permissions is not None: role.permissions = data.permissions
-        
+        if data.name is not None:
+            role.name = data.name
+        if data.description is not None:
+            role.description = data.description
+        if data.permissions is not None:
+            role.permissions = data.permissions
+
         await self.db.commit()
         await self.db.refresh(role)
         

@@ -19,11 +19,13 @@ celery_app.conf.update(
     task_acks_late=True,
 )
 
-celery_app.autodiscover_tasks([
-    'app.workers.ingestion_tasks',
-    'app.workers.sync_tasks',
-    'app.workers.cleanup_tasks'
-])
+celery_app.autodiscover_tasks(
+    [
+        "app.tasks.ingest",
+        "app.workers.sync_tasks",
+        "app.workers.cleanup_tasks",
+    ]
+)
 
 celery_app.conf.beat_schedule = {
     'sync-all-sources-every-6-hours': {

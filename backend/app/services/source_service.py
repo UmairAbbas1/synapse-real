@@ -40,15 +40,16 @@ class SourceService:
     async def list_sources(self, limit: int, offset: int) -> Tuple[list[DataSource], int]:
         result = await self.db.execute(
             select(DataSource)
-            .where(DataSource.is_deleted == False)
+            .where(DataSource.is_deleted.is_(False))
             .limit(limit)
             .offset(offset)
         )
         sources = list(result.scalars().all())
-        
+
         from sqlalchemy import func
+
         count_res = await self.db.execute(
-            select(func.count(DataSource.id)).where(DataSource.is_deleted == False)
+            select(func.count(DataSource.id)).where(DataSource.is_deleted.is_(False))
         )
         total = count_res.scalar_one()
         return sources, total

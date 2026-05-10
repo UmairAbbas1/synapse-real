@@ -1,54 +1,30 @@
-from datetime import datetime, timedelta, timezone
+"""Compatibility JWT verification for legacy tests."""
 
-import bcrypt
-import jwt
-import structlog
+from datetime import datetime, timezone
 
-from app.config import settings
 from app.api.middleware.error_handler import AuthenticationError
+from app.core.auth import decode_access_token, InvalidTokenError
 from app.schemas.auth import TokenPayload
 
-logger = structlog.get_logger(__name__)
 
 class AuthService:
-    def create_access_token(self, user_id: str, role: str, permissions: list[str]) -> str:
-        expire = datetime.now(timezone.utc) + timedelta(hours=settings.SESSION_EXPIRE_HOURS)
-        payload = {
-            "sub": user_id,
-            "role": role,
-            "permissions": permissions,
-            "exp": expire,
-            "iat": datetime.now(timezone.utc),
-            "type": "access"
-        }
-        return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+    """Minimal facade — interactive flows use core.auth.AuthService(db, redis)."""
 
     def verify_token(self, token: str) -> TokenPayload:
         try:
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            if payload.get("type") != "access":
-                raise AuthenticationError("Invalid token type.")
-            # Converting timestamps gracefully mapping native outputs reliably across the payload safely
-            if "exp" in payload and isinstance(payload["exp"], (int, float)):
-                payload["exp"] = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
-            return TokenPayload(**payload)
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationError("Token expired.")
-        except jwt.InvalidTokenError:
-            raise AuthenticationError("Invalid token.")
-
-    def create_refresh_token(self, user_id: str) -> str:
-        expire = datetime.now(timezone.utc) + timedelta(days=7)
-        payload = {
-            "sub": user_id,
-            "exp": expire,
-            "iat": datetime.now(timezone.utc),
-            "type": "refresh"
-        }
-        return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
-
-    def hash_password(self, password: str) -> str:
-        return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
-    def verify_password(self, plain: str, hashed: str) -> bool:
-        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+            payload = decode_access_token(token)
+        except InvalidTokenError as exc:
+            raise AuthenticationError("Invalid token.") from exc
+        exp_raw = payload.get("exp")
+        exp_dt = None
+        if isinstance(exp_raw, (int, float)):
+            exp_dt = datetime.fromtimestamp(exp_raw, tz=timezone.utc)
+        raw_perms = payload.get("perms")
+        perms = [str(x) for x in raw_perms] if isinstance(raw_perms, list) else []
+        return TokenPayload(
+            sub=str(payload["sub"]),
+            role=str(payload.get("role") or "USER"),
+            permissions=perms,
+            exp=exp_dt,
+            sid=str(payload["sid"]) if payload.get("sid") else None,
+        )

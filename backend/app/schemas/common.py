@@ -9,6 +9,13 @@ class PaginatedResponse(BaseModel, Generic[T]):
     limit: int
     offset: int
 
+
+class PageResponse(BaseModel, Generic[T]):
+    items: list[T]
+    total: int
+    page: int
+    size: int
+
 class ErrorResponse(BaseModel):
     error: str
     message: str

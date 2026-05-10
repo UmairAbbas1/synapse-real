@@ -1,43 +1,57 @@
-"""Base interfaces mapping explicitly across pipeline ingress paths accurately."""
+"""Connector interfaces and normalized document record."""
+
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import AsyncIterator
+from datetime import datetime
+from collections.abc import AsyncGenerator
+
 
 @dataclass
 class RawDocument:
-    """Normalized document payload structurally traversing specific architectures globally."""
-    source_id: str
-    source_type: str
     source_url: str
+    doc_type: str
     title: str
     content: str
+    author: str
     author_email: str
-    author_name: str
-    permission_tags: list[str]
-    created_at: str
-    updated_at: str
-    metadata: dict
+    timestamp: datetime
+    metadata: dict[str, object]
+    permission_tag: str
+    source_id: str = ""
+
+    @property
+    def source_type(self) -> str:
+        return self.doc_type
+
+    @property
+    def author_name(self) -> str:
+        return self.author
+
+    @property
+    def created_at(self) -> datetime:
+        return self.timestamp
+
+    @property
+    def updated_at(self) -> datetime:
+        return self.timestamp
+
 
 class BaseConnector(ABC):
-    """Pipeline templates dynamically protecting logic implementations natively securely."""
+    """Base class for ingestion connectors."""
 
-    def __init__(self, config: dict | None = None):
-        """Provide config structures securely initializing connection configurations inherently."""
-        self.config = config or {}
-
-    @abstractmethod
-    async def authenticate(self, credentials: dict) -> bool:
-        """Evaluate credential signatures successfully bypassing failures structurally."""
-        pass
+    def __init__(self, credentials: dict[str, object]) -> None:
+        self.credentials = credentials
 
     @abstractmethod
-    async def fetch_documents(self, since: str | None = None) -> AsyncIterator[RawDocument]:
-        """Stream isolated bounds dynamically processing raw chunks organically securely."""
-        # Yielding RawDocument elements over Async Iterators is required
-        yield NotImplemented
+    async def authenticate(self) -> None:
+        """Validate credentials / establish session."""
+
+    async def fetch_documents(self) -> AsyncGenerator[RawDocument, None]:
+        """Yield documents from upstream."""
+        raise NotImplementedError
 
     @abstractmethod
-    async def test_connection(self) -> bool:
-        """Validate network handshakes silently reporting boundaries gracefully."""
-        pass
+    async def health_check(self) -> bool:
+        """Return True if connector configuration is usable."""

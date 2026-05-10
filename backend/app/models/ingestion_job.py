@@ -1,8 +1,7 @@
 """SQLAlchemy ORM models defining background ingestion task histories dynamically."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import String, Integer, DateTime
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
