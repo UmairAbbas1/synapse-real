@@ -7,14 +7,11 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential curl \
+    && apt-get install -y --no-install-recommends build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml README.md ./
 COPY app ./app/
-COPY scripts ./scripts/
-COPY alembic ./alembic/
-COPY alembic.ini ./alembic.ini
 
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --no-cache-dir --upgrade pip \
@@ -23,6 +20,17 @@ RUN python -m venv /opt/venv \
 # Stage 2: runtime
 FROM python:3.12-slim AS runtime
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && addgroup --gid 1001 synapse \
+    && adduser --uid 1001 --gid 1001 --no-create-home synapse
+
+COPY --from=builder /opt/venv /opt/venv
+COPY app /app/app
+COPY scripts /app/scripts
+COPY alembic /app/alembic
+COPY alembic.ini /app/
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
@@ -30,21 +38,9 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     PATH="/opt/venv/bin:$PATH"
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && useradd --create-home --uid 1000 --shell /usr/sbin/nologin appuser
+USER synapse
 
-COPY --from=builder /opt/venv /opt/venv
-COPY --from=builder /build/app ./app
-COPY --from=builder /build/scripts ./scripts
-COPY --from=builder /build/alembic ./alembic
-COPY --from=builder /build/alembic.ini ./alembic.ini
-COPY --from=builder /build/pyproject.toml ./pyproject.toml
-
-RUN chown -R 1000:1000 /app
-USER 1000
-
-EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

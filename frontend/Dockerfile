@@ -15,18 +15,20 @@ RUN npm run build
 # Stage 3: runtime
 FROM node:20-alpine AS runner
 WORKDIR /app
+
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup -g 1001 -S appgroup \
-    && adduser -S appuser -u 1001 -G appgroup
+RUN addgroup -g 1001 -S nextjs && adduser -u 1001 -S nextjs -G nextjs
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-RUN chown -R appuser:appgroup /app
-USER appuser
+USER nextjs
 
 EXPOSE 3000
+
 CMD ["node", "server.js"]

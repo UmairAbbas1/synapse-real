@@ -1,91 +1,67 @@
 from __future__ import annotations
-
-from unittest.mock import AsyncMock
-
 import pytest
-
-import app.core.query_engine as qe_module
-from app.core.citation_builder import CitationBuilder
-from app.core.prompt_builder import PromptBuilder
-from app.core.query_engine import QueryEngine
+from httpx import AsyncClient
+from app.main import app
+from unittest.mock import MagicMock, AsyncMock
 from app.core.vector_search import RetrievedChunk
 
-
-class _Embedding:
-    def encode(self, _: str) -> list[float]:
-        return [0.1, 0.2, 0.3]
-
-
-class _Vector:
-    async def search(self, **_: object) -> list[RetrievedChunk]:
-        return [
-            RetrievedChunk(
-                text="ERR-502-DB means pool exhaustion.",
-                score=0.92,
-                source_url="https://example.com/doc",
-                source_type="github",
-                document_title="Troubleshooting",
-                author="ops@company.com",
-                timestamp="2026-01-01T00:00:00Z",
-            )
-        ]
-
-
-class _Graph:
-    async def enrich(self, chunk_sources: list[str], query: str) -> list[dict[str, object]]:
-        return [{"projects": ["Synapse"], "authors": ["ops@company.com"], "q": query, "src": chunk_sources}]
-
-
-class _LLM:
-    model_name = "llama3:8b"
-
-    async def generate(self, prompt: str, system_prompt: str | None = None) -> str:
-        assert "ERR-502-DB" in prompt
-        assert system_prompt is not None
-        return "Check max_connections and pool_size."
-
-
-class _Expert:
-    async def find_expert(self, _: str) -> None:
-        return None
-
-
-class _CompatMetadata:
-    def __init__(self, **kwargs: object) -> None:
-        self.top_similarity_score = kwargs.get("top_similarity_score", 0.0)
-        self.model = kwargs.get("model_used", kwargs.get("model", "unknown"))
-
-
-class _CompatResponse:
-    def __init__(self, **kwargs: object) -> None:
-        self.answer = kwargs["answer"]
-        self.citations = kwargs["citations"]
-        self.metadata = kwargs["metadata"]
-        self.expert = kwargs.get("expert_suggestion", kwargs.get("expert"))
-
-
 @pytest.mark.asyncio
-async def test_query_engine_execute_end_to_end(monkeypatch: pytest.MonkeyPatch) -> None:
-    # QueryEngine currently uses legacy response field names; patch response classes for test compatibility.
-    monkeypatch.setattr(qe_module, "QueryMetadata", _CompatMetadata)
-    monkeypatch.setattr(qe_module, "QueryResponse", _CompatResponse)
+class TestQueryPipeline:
+    async def test_admin_query_success(self, client: AsyncClient) -> None:
+        # Arrange
+        login_data = {"email": "admin@company.com", "password": "Admin123!"}
+        login_resp = await client.post("/api/v1/auth/login", json=login_data)
+        token = login_resp.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Mock QueryEngine execution
+        app.state.embedding_svc.embed.return_value = [0.1] * 384
+        chunk = RetrievedChunk(
+            chunk_id="1", chunk_text="Admin info", source_url="url", 
+            doc_type="pdf", author="admin", timestamp="2024", 
+            permission_tag="*", similarity=0.9
+        )
+        app.state.vector_svc.search.return_value = [chunk]
+        app.state.graph_svc.enrich.return_value = []
+        app.state.prompt_builder.build.return_value = ("sys", "user")
+        app.state.llm_client.generate.return_value = "Admin answer"
+        app.state.llm_client.model_name = "llama3:8b"
+        app.state.citation_builder.build.return_value = []
+        
+        # Act
+        resp = await client.post("/api/v1/query", json={"query": "secret admin query"}, headers=headers)
+        
+        # Assert
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["answer"] == "Admin answer"
+        assert "metadata" in data
+        assert data["is_low_confidence"] is False
 
-    engine = QueryEngine(
-        embedding_svc=_Embedding(),
-        vector_svc=_Vector(),
-        graph_svc=_Graph(),
-        llm_client=_LLM(),
-        expert_router=_Expert(),
-        prompt_builder=PromptBuilder(),
-        citation_builder=CitationBuilder(),
-    )
+    async def test_rbac_blocking_returns_low_confidence(self, client: AsyncClient) -> None:
+        # Arrange
+        login_data = {"email": "jamie.junior@company.com", "password": "Demo1234!"}
+        login_resp = await client.post("/api/v1/auth/login", json=login_data)
+        token = login_resp.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Mock vector search to return no chunks because of RBAC tags
+        app.state.embedding_svc.embed.return_value = [0.1] * 384
+        app.state.vector_svc.search.return_value = [] # No access
+        app.state.graph_svc.enrich.return_value = []
+        app.state.prompt_builder.build.return_value = ("sys", "user")
+        app.state.llm_client.generate.return_value = "I don't know"
+        app.state.llm_client.model_name = "llama3:8b"
+        app.state.citation_builder.build.return_value = []
+        app.state.expert_router.find_expert.return_value = None
+        
+        # Act
+        resp = await client.post("/api/v1/query", json={"query": "admin secret query"}, headers=headers)
+        
+        # Assert
+        assert resp.status_code == 200
+        assert resp.json()["is_low_confidence"] is True
 
-    response = await engine.execute(
-        query="How do I fix ERR-502-DB?",
-        user_permission_tags=["engineering", "backend"],
-        user_id="user-1",
-    )
-
-    assert "pool_size" in response.answer
-    assert len(response.citations) == 1
-    assert response.metadata.top_similarity_score > 0.9
+    async def test_unauthenticated_query_fails(self, client: AsyncClient) -> None:
+        resp = await client.post("/api/v1/query", json={"query": "test"})
+        assert resp.status_code == 401

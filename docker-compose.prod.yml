@@ -7,8 +7,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_URI=bolt://neo4j:7687
@@ -22,56 +20,70 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+    networks:
+      - internal
 
   synapse-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+      args:
+        - NEXT_PUBLIC_API_URL=https://localhost/api/v1
     environment:
-      - NEXT_PUBLIC_API_URL=http://synapse-api:8000
+      - NEXT_PUBLIC_API_URL=https://localhost/api/v1
     depends_on:
       - synapse-api
+    restart: unless-stopped
+    networks:
+      - internal
 
   synapse-worker:
     build:
       context: ./backend
       dockerfile: Dockerfile.worker
-    command: celery -A app.workers.celery_app worker -l info -c 4
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_URI=bolt://neo4j:7687
+      - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
-      - redis
-      - postgres
-      - neo4j
-
-  synapse-beat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.worker
-    command: celery -A app.workers.celery_app beat -l info
-    depends_on:
-      - redis
-
-  
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    networks:
+      - internal
 
   neo4j:
     image: neo4j:5.25-community
-    ports:
-      - "7474:7474"
-      - "7687:7687"
     environment:
       - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
       - NEO4J_PLUGINS=["apoc"]
     volumes:
       - neo4j_data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2g
     healthcheck:
       test: ["CMD", "neo4j", "status"]
       interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
 
   postgres:
     image: postgres:16-alpine
@@ -81,55 +93,74 @@ services:
       POSTGRES_DB: synapse
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U synapse"]
       interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
 
   redis:
     image: redis:7-alpine
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
 
   ollama:
     image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    restart: unless-stopped
     deploy:
       resources:
+        limits:
+          memory: 8g
         reservations:
           devices:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    networks:
+      - internal
 
   nginx:
     image: nginx:1.27-alpine
     ports:
-      - "443:443"
       - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/snippets/security-headers.conf:/etc/nginx/snippets/security-headers.conf
-      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
     depends_on:
       - synapse-api
       - synapse-frontend
+    restart: unless-stopped
+    networks:
+      - internal
+      - external
 
-  flower:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.worker
-    command: celery -A app.workers.celery_app flower --port=5555
-    ports:
-      - "5555:5555"
-    depends_on:
-      - redis
+networks:
+  internal:
+    internal: true
+  external:
 
 volumes:
   neo4j_data:

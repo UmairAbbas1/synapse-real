@@ -60,6 +60,7 @@ dev = [
     "pytest-cov==6.*",
     "factory-boy==3.*",
     "faker==33.*",
+    "respx==0.22.*",
 ]
 
 [tool.setuptools.packages.find]
