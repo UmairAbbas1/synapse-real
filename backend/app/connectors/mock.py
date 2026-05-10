@@ -30,7 +30,7 @@ class MockConnector(BaseConnector):
     async def fetch_documents(self) -> AsyncGenerator[RawDocument, None]:  # type: ignore[override]
         await self.authenticate()
         root = Path(str(self.credentials["fixture_dir"]))
-        for path in sorted(root.glob("*.md")):
+        for path in sorted(root.rglob("*.md")):
             raw_text = path.read_text(encoding="utf-8")
             if raw_text.startswith("---"):
                 parts = raw_text.split("---", 2)

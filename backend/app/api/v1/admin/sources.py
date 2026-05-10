@@ -77,7 +77,7 @@ async def list_sources(
                 status=s.status,
                 sync_schedule=str(cfg.get("sync_schedule")) if cfg.get("sync_schedule") else None,
                 default_permission_tags=list(s.default_permission_tags or []),
-                created_by=s.created_by,
+                created_by=str(s.created_by) if s.created_by is not None else "",
                 created_at=s.created_at,
                 updated_at=s.updated_at,
             )
@@ -114,7 +114,7 @@ async def create_source(
         status=row.status,
         sync_schedule=body.sync_schedule,
         default_permission_tags=list(row.default_permission_tags or []),
-        created_by=row.created_by,
+        created_by=str(row.created_by) if row.created_by is not None else "",
         created_at=row.created_at,
         updated_at=row.updated_at,
     )

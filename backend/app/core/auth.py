@@ -7,9 +7,9 @@ import json
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 import jwt
 import structlog
-from passlib.context import CryptContext
 from redis.asyncio import Redis
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,8 +18,6 @@ from app.config import settings
 from app.models.user import User
 
 logger = structlog.get_logger(__name__)
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 SESSION_REDIS_PREFIX = "session:"
 SESSION_TTL_SECONDS = settings.SESSION_EXPIRE_HOURS * 3600
@@ -44,13 +42,16 @@ class SessionRevokedError(Exception):
 
 
 def hash_password(plain: str) -> str:
-    """Hash password using bcrypt via passlib."""
-    return pwd_context.hash(plain)
+    """Hash password using bcrypt (native ``bcrypt`` avoids passlib backend init bugs)."""
+    return bcrypt.hashpw(plain.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    """Verify plaintext password against bcrypt hash."""
-    return pwd_context.verify(plain, hashed)
+    """Verify plaintext password against a bcrypt hash string."""
+    try:
+        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    except ValueError:
+        return False
 
 
 def create_access_token(user: User, session_id: str) -> str:

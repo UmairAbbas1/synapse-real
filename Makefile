@@ -17,9 +17,9 @@ test:
 deploy:
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-# Seed demo data
+# Seed demo data (roles, users, mock source, synchronous ingestion)
 seed:
-	docker compose exec synapse-api python scripts/seed_data.py
+	docker compose exec synapse-api python scripts/seed_demo_data.py
 
 # Download AI models
 models:
