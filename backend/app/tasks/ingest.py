@@ -68,7 +68,7 @@ async def _pipeline(source_id: str, job_id: str | None) -> dict[str, object]:
             session.add(
                 IngestionJob(
                     id=uuid.UUID(final_job_id),
-                    source_id=source_id,
+                    source_id=uuid.UUID(source_id),
                     status="running",
                     started_at=datetime.now(timezone.utc),
                 )

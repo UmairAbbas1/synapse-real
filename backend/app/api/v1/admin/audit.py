@@ -68,7 +68,7 @@ async def list_audit(
     items = [
         AuditEntryResponse(
             id=str(r.id),
-            user_id=r.user_id,
+            user_id=str(r.user_id) if r.user_id is not None else "",
             action=r.action,
             resource_type=r.resource_type,
             details=dict(r.details or {}),
@@ -91,7 +91,7 @@ async def get_audit_entry(
         raise HTTPException(status_code=404, detail="Not found")
     return AuditEntryResponse(
         id=str(row.id),
-        user_id=row.user_id,
+        user_id=str(row.user_id) if row.user_id is not None else "",
         action=row.action,
         resource_type=row.resource_type,
         details=dict(row.details or {}),
