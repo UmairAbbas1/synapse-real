@@ -1,16 +1,25 @@
 """Prompt generation service strictly aligned with master constraints."""
 
+from typing import Protocol
+
 import structlog
-from typing import Any
 
 from app.core.vector_search import RetrievedChunk
 
 logger = structlog.get_logger(__name__)
 
+
+class _TokenEncoder(Protocol):
+    def encode(self, text: str) -> list[int]:
+        ...
+
+
 try:
-    import tiktoken  # type: ignore
+    import tiktoken
+
+    _DEFAULT_ENCODER: _TokenEncoder | None = tiktoken.get_encoding("cl100k_base")
 except Exception:  # pragma: no cover
-    tiktoken = None
+    _DEFAULT_ENCODER = None
 
 
 SYSTEM_PROMPT = """You are Synapse, an internal AI assistant for {company_name}. 
@@ -50,8 +59,8 @@ indicate your uncertainty level in the response.
 
 
 class PromptBuilder:
-    def __init__(self):
-        self.encoder = tiktoken.get_encoding("cl100k_base") if tiktoken else None
+    def __init__(self) -> None:
+        self.encoder: _TokenEncoder | None = _DEFAULT_ENCODER
         self.max_tokens = 3000
 
     def _count_tokens(self, text: str) -> int:
@@ -65,7 +74,7 @@ class PromptBuilder:
         self,
         query: str,
         chunks: list[RetrievedChunk],
-        graph_context: list[dict[str, Any]],
+        graph_context: list[dict[str, object]],
         is_low_confidence: bool,
         company_name: str = "the company",
     ) -> tuple[str, str]:
@@ -77,14 +86,17 @@ class PromptBuilder:
         # Extract graph mappings
         graph_lines = []
         for g in graph_context:
-            projects = ", ".join(g.get("projects", []))
-            authors = ", ".join(g.get("authors", []))
+            raw_p = g.get("projects")
+            raw_a = g.get("authors")
+            proj_list = raw_p if isinstance(raw_p, list) else []
+            auth_list = raw_a if isinstance(raw_a, list) else []
+            projects = ", ".join(str(x) for x in proj_list if x)
+            authors = ", ".join(str(x) for x in auth_list if x)
             if projects or authors:
                 graph_lines.append(f"Related: {projects}, Authors: {authors}")
         graph_text = "\n".join(graph_lines) if graph_lines else "None"
-        
-        # Acquire confidence scores
-        score = round(chunks[0].score, 2) if chunks else 0.0
+
+        score = round(chunks[0].similarity, 2) if chunks else 0.0
         
         addendum = ""
         if is_low_confidence:
@@ -105,7 +117,11 @@ class PromptBuilder:
         # Safely compile available document contexts iteratively to avoid breaking boundaries
         formatted_chunks = []
         for chunk in chunks:
-            chunk_str = f"Source: {chunk.document_title} ({chunk.source_type}) by {chunk.author}\n{chunk.text}\n---"
+            title_hint = chunk.source_url or chunk.chunk_id
+            chunk_str = (
+                f"Source: {title_hint} ({chunk.doc_type}) by {chunk.author}\n"
+                f"{chunk.chunk_text}\n---"
+            )
             chunk_tokens = self._count_tokens(chunk_str)
             
             if available_tokens - chunk_tokens > 0:

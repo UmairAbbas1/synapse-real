@@ -8,7 +8,7 @@ export type ServiceStatus = "healthy" | "degraded" | "down"
 
 export interface SystemHealth {
   postgres: ServiceStatus
-  qdrant: ServiceStatus
+  pgvector: ServiceStatus
   neo4j: ServiceStatus
   redis: ServiceStatus
   ollama: ServiceStatus
@@ -17,7 +17,7 @@ export interface SystemHealth {
 export function SystemHealthCard({ health }: { health: SystemHealth }) {
   const services = [
     { name: "PostgreSQL", key: "postgres", icon: Database },
-    { name: "Qdrant Vector DB", key: "qdrant", icon: Search },
+    { name: "pgvector (Postgres)", key: "pgvector", icon: Search },
     { name: "Neo4j Graph", key: "neo4j", icon: Network },
     { name: "Redis Queue", key: "redis", icon: HardDrive },
     { name: "Ollama LLM", key: "ollama", icon: Cpu },

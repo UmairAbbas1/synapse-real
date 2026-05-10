@@ -45,14 +45,6 @@ async def db_session() -> AsyncIterator[AsyncSession]:
 
 
 @pytest.fixture
-def mock_qdrant() -> AsyncMock:
-    mock = AsyncMock()
-    mock.search.return_value = []
-    mock.upsert.return_value = None
-    return mock
-
-
-@pytest.fixture
 def mock_neo4j() -> AsyncMock:
     mock_driver = AsyncMock()
     mock_session = AsyncMock()

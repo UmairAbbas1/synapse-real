@@ -52,11 +52,6 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = Field(..., description="DB password")
     POSTGRES_DB: str = "synapse"
 
-    # Qdrant
-    QDRANT_HOST: str = "localhost"
-    QDRANT_PORT: int = 6333
-    QDRANT_COLLECTION: str = "synapse_documents"
-
     # Neo4j
     NEO4J_URI: str = "bolt://localhost:7687"
     NEO4J_USER: str = "neo4j"

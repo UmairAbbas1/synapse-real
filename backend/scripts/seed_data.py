@@ -9,15 +9,13 @@ from datetime import UTC, datetime, timedelta
 
 import structlog
 from passlib.context import CryptContext
-from qdrant_client import AsyncQdrantClient
-from qdrant_client.models import PointStruct
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import settings
 from app.core.embedding import EmbeddingService, load_embedding_model
+from app.core.vector_search import VectorSearchService
 from app.db.neo4j import close_neo4j, init_neo4j, get_neo4j_driver
-from app.db.qdrant import close_qdrant, get_qdrant_client, init_qdrant
 
 logger = structlog.get_logger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -207,7 +205,7 @@ async def _upsert_data_sources(session: AsyncSession, user_ids: dict[str, str]) 
     return source_ids
 
 
-def _qdrant_documents() -> list[dict[str, object]]:
+def _seed_vector_documents() -> list[dict[str, object]]:
     docs: list[dict[str, object]] = []
     now = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
@@ -256,7 +254,7 @@ def _qdrant_documents() -> list[dict[str, object]]:
                 "Primary PostgreSQL handles OLTP while replicas serve read-heavy analytics.",
                 "Use indexed foreign keys on hot join paths to reduce query planning overhead.",
                 "Partition large audit logs by month to keep indexes performant.",
-                "Store vectors in Qdrant and maintain source-of-truth metadata in PostgreSQL.",
+                "Store vectors in PostgreSQL with pgvector and maintain metadata in relational tables.",
                 "Neo4j enriches retrieval by linking documents, projects, and authors.",
             ],
         ),
@@ -284,20 +282,36 @@ def _qdrant_documents() -> list[dict[str, object]]:
     return docs
 
 
-async def _seed_qdrant(client: AsyncQdrantClient) -> None:
+async def _seed_pgvector_chunks() -> None:
     load_embedding_model()
     embedder = EmbeddingService()
-    docs = _qdrant_documents()
-    points: list[PointStruct] = []
+    vector_svc = VectorSearchService()
+    docs = _seed_vector_documents()
+    rows: list[dict[str, object]] = []
 
     for row in docs:
-        vector = embedder.encode(str(row["chunk_text"]))
-        point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"{SEED_TAG}:{row['doc_key']}"))
-        payload = {k: v for k, v in row.items() if k != "doc_key"}
-        points.append(PointStruct(id=point_id, vector=vector, payload=payload))
+        vector = embedder.embed(str(row["chunk_text"]))
+        chunk_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"{SEED_TAG}:{row['doc_key']}"))
+        tags_obj = row.get("permission_tags")
+        if isinstance(tags_obj, list) and tags_obj:
+            tag = str(tags_obj[0])
+        else:
+            tag = "engineering"
+        rows.append(
+            {
+                "id": chunk_id,
+                "chunk_text": str(row["chunk_text"]),
+                "source_url": str(row["source_url"]),
+                "doc_type": str(row["source_type"]),
+                "author": str(row["author"]),
+                "timestamp": str(row["timestamp"]),
+                "permission_tag": tag,
+                "embedding": str(vector),
+            }
+        )
 
-    await client.upsert(collection_name=settings.QDRANT_COLLECTION, points=points)
-    logger.info("seed_qdrant_upserted", count=len(points), collection=settings.QDRANT_COLLECTION)
+    await vector_svc.upsert_chunks(rows)
+    logger.info("seed_pgvector_upserted", count=len(rows))
 
 
 async def _seed_neo4j() -> None:
@@ -345,7 +359,7 @@ async def _seed_neo4j() -> None:
             "title": "Database Architecture Overview",
             "source_type": "github",
             "source_url": "https://seed.local/database-architecture/1",
-            "summary": "PostgreSQL, Qdrant, Neo4j architecture notes.",
+            "summary": "PostgreSQL with pgvector and Neo4j architecture notes.",
             "author": "jane.doe@company.com",
             "project": "Synapse Platform",
         },
@@ -483,13 +497,11 @@ async def _run() -> None:
     logger.info("seed_start")
     await _seed_postgres()
 
-    await init_qdrant()
     await init_neo4j()
     try:
-        await _seed_qdrant(get_qdrant_client())
+        await _seed_pgvector_chunks()
         await _seed_neo4j()
     finally:
-        await close_qdrant()
         await close_neo4j()
     logger.info("seed_complete")
 

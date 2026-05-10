@@ -3,27 +3,29 @@
 from __future__ import annotations
 
 import structlog
-from typing import Any
 from neo4j import AsyncDriver
 
 from app.connectors.base import RawDocument
+from app.core.vector_search import RetrievedChunk
 
 logger = structlog.get_logger(__name__)
 
 
 class GraphSearchService:
-    def __init__(self, driver: AsyncDriver):
+    def __init__(self, driver: AsyncDriver) -> None:
         self.driver = driver
 
     async def enrich(
         self,
-        chunk_sources: list[str],
-        query_text: str,
-    ) -> list[dict[str, Any]]:
+        query: str,
+        chunks: list[RetrievedChunk],
+    ) -> list[dict[str, object]]:
         """
         Given retrieved chunks, find related entities in the knowledge graph.
         Returns related tickets, projects, and authors for context enrichment.
         """
+        _ = query
+        chunk_sources = list({c.source_url for c in chunks if c.source_url})
         if not chunk_sources:
             return []
 
@@ -42,7 +44,7 @@ class GraphSearchService:
                 """,
                 source_urls=chunk_sources,
             )
-            
+
             enrichment_data = [record.data() async for record in result]
             logger.info("graph_enrichment_complete", nodes_enriched=len(enrichment_data))
             return enrichment_data
@@ -93,7 +95,7 @@ class GraphSearchService:
             )
             logger.info("graph_update_complete", doc_title=doc.title)
 
-    async def find_experts_for_topics(self, keywords: list[str]) -> list[dict[str, Any]]:
+    async def find_experts_for_topics(self, keywords: list[str]) -> list[dict[str, object]]:
         """
         Uses the fulltext index 'document_content' to find ranked experts.
         """

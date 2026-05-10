@@ -44,6 +44,10 @@ class EmbeddingService:
         vector = _model.encode(text, normalize_embeddings=True)
         return vector.tolist()
 
+    def embed(self, text: str) -> list[float]:
+        """Alias for encode — RAG pipeline entrypoint."""
+        return self.encode(text)
+
     def encode_batch(self, texts: list[str]) -> list[list[float]]:
         """Convert a batch of text strings into normalized embedding vectors."""
         if _model is None:

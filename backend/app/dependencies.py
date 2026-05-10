@@ -3,12 +3,10 @@
 from typing import AsyncGenerator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-# removed: was qdrant, now using pgvector
 from neo4j import AsyncDriver
 from redis.asyncio import Redis
 
 from app.db.postgres import get_db_session
-# removed: was qdrant, now using pgvector
 from app.db.neo4j import get_neo4j_driver
 from app.db.redis import get_redis_client
 
@@ -18,7 +16,7 @@ async def get_db(session: AsyncSession = Depends(get_db_session)) -> AsyncGenera
     # pass the yielded session here. We can just yield it further.
     yield session
 
-# removed: was qdrant, now using pgvector
+
 def get_neo4j() -> AsyncDriver:
     """Dependency: Neo4j graph database driver."""
     return get_neo4j_driver()

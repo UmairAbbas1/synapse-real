@@ -30,11 +30,6 @@ class NotFoundError(SynapseError):
         super().__init__(f"{resource} '{identifier}' not found", 404, "NOT_FOUND")
 
 
-class LLMUnavailableError(SynapseError):
-    def __init__(self):
-        super().__init__("AI service temporarily unavailable. Please retry.", 503, "LLM_UNAVAILABLE")
-
-
 class VectorDBError(SynapseError):
     def __init__(self):
         super().__init__("Search service error. Please retry.", 503, "VECTOR_DB_ERROR")

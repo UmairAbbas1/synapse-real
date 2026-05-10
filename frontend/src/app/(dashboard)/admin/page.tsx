@@ -28,7 +28,7 @@ const fallbackData: DashboardStats = {
   hourly_queries: Array.from({ length: 24 }, (_, i) => ({ hour: `${i}:00`, count: Math.floor(Math.random() * 100) })),
   avg_response_time_ms: 850,
   active_users: 12,
-  health: { postgres: "healthy", qdrant: "healthy", neo4j: "healthy", redis: "healthy", ollama: "healthy" }
+  health: { postgres: "healthy", pgvector: "healthy", neo4j: "healthy", redis: "healthy", ollama: "healthy" }
 }
 
 export default function AdminDashboard() {

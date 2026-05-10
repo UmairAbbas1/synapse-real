@@ -7,7 +7,7 @@ from fastapi import Request
 from app.core.query_engine import QueryEngine
 
 
-def get_query_engine(request: Request) -> QueryEngine:
+async def get_query_engine(request: Request) -> QueryEngine:
     """Return the initialized QueryEngine from application state."""
     return QueryEngine(
         embedding_svc=request.app.state.embedding_svc,

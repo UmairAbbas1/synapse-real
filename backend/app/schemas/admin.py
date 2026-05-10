@@ -11,7 +11,7 @@ class DashboardStats(BaseModel):
 class SystemHealth(BaseModel):
     api: bool
     postgres: bool
-    qdrant: bool
+    pgvector: bool
     neo4j: bool
     redis: bool
     ollama: bool

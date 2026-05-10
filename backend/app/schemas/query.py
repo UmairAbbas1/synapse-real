@@ -23,7 +23,7 @@ class ExpertSuggestion(BaseModel):
     name: str
     email: str
     job_title: str
-    relevance_score: int
+    relevance_score: float
 
 class QueryMetadata(BaseModel):
     top_similarity_score: float

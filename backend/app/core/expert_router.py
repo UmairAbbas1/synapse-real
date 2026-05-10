@@ -70,7 +70,7 @@ class ExpertRouter:
                 name=record["name"],
                 email=record["email"],
                 job_title=record["job_title"] or "Subject Matter Expert",
-                relevance_score=float(record["relevance_score"])
+                relevance_score=float(record["relevance_score"]),
             )
             
             logger.info("expert_search_success", expert_name=expert.name)

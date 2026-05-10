@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-# removed: was qdrant, now using pgvector
 from neo4j import AsyncDriver
 from redis.asyncio import Redis
 import httpx
@@ -22,7 +21,6 @@ async def liveness_probe() -> dict[str, str]:
 @router.get("/ready", response_model=SystemHealth)
 async def readiness_probe(
     db: AsyncSession = Depends(get_db),
-    # removed: was qdrant, now using pgvector
     neo_driver: AsyncDriver = Depends(get_neo4j),
     redis: Redis = Depends(get_redis),
 ) -> SystemHealth:
@@ -30,7 +28,7 @@ async def readiness_probe(
     health_status = {
         "api": True,
         "postgres": False,
-        "qdrant": False,
+        "pgvector": False,
         "neo4j": False,
         "redis": False,
         "ollama": False,
@@ -43,9 +41,12 @@ async def readiness_probe(
     except Exception as e:
         logger.error("postgres_health_check_failed", error=str(e))
 
-    # 2. Qdrant
-    # removed: was qdrant, now using pgvector
-    health_status["qdrant"] = True
+    # 2. pgvector extension (same PostgreSQL instance)
+    try:
+        ext = await db.execute(text("SELECT 1 FROM pg_extension WHERE extname = 'vector' LIMIT 1"))
+        health_status["pgvector"] = ext.scalar_one_or_none() is not None
+    except Exception as e:
+        logger.error("pgvector_health_check_failed", error=str(e))
 
     # 3. Neo4j
     try:

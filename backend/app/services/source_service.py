@@ -74,7 +74,7 @@ class SourceService:
         # Fire Vector Database deletes seamlessly cascading cleanup parameters exactly explicitly
         try:
             from app.core.vector_search import VectorSearchService
-            # removed: was qdrant, now using pgvector
+            # vectors stored in PostgreSQL via pgvector
             svc = VectorSearchService()
             await svc.delete_by_source(source_id)
             logger.info("data_source_deleted", source_id=str(source.id))

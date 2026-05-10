@@ -6,7 +6,6 @@ import uuid
 from datetime import datetime, timezone
 from celery import shared_task
 from sqlalchemy import update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 # Dynamic components loading inside logic execution strictly mapping paths efficiently
 from app.connectors.registry import get_connector
@@ -24,7 +23,7 @@ def get_sync_db_session_marker():
     from app.db.postgres import get_async_session_factory
     return get_async_session_factory()
 
-# removed: was qdrant, now using pgvector
+# vectors persisted via PostgreSQL pgvector (document_chunks)
 
 def get_neo4j():
     from app.db.neo4j import get_neo4j_driver
