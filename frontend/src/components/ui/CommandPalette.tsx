@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { MessageSquare, Clock, Settings, Network, Search, Moon, Sun, Trash2, LogOut } from "lucide-react"
 import { useUIStore } from "@/stores/uiStore"
 import { useAuth } from "@/hooks/useAuth"
-import { useChatStore } from "@/stores/chatStore"
+import { useChatStore } from "@/store/chat-store"
 
 export function CommandPalette() {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -15,7 +15,7 @@ export function CommandPalette() {
   const router = useRouter()
   const { theme, toggleTheme } = useUIStore()
   const { logout } = useAuth()
-  const { messages, clearMessages } = useChatStore()
+  const { messages, clearChat } = useChatStore()
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -125,7 +125,7 @@ export function CommandPalette() {
                     {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
                     Toggle {theme === "dark" ? "Light" : "Dark"} Mode
                   </Command.Item>
-                  <Command.Item onSelect={() => runCommand(() => clearMessages())}>
+                  <Command.Item onSelect={() => runCommand(() => clearChat())}>
                     <Trash2 className="mr-2 h-4 w-4 text-status-error" />
                     Clear Chat History
                   </Command.Item>

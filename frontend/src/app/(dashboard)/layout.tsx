@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { useUIStore } from "@/stores/uiStore"
 import { Sidebar } from "@/components/layout/Sidebar"
@@ -12,10 +13,11 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
   const { isAuthenticated, isLoading } = useAuth()
   const { sidebarCollapsed } = useUIStore()
+  const isChatShell = pathname === "/chat" || pathname.startsWith("/chat/")
 
-  // During SSR or initial auth check, don't flash the login redirect
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-primary">
@@ -24,23 +26,23 @@ export default function DashboardLayout({
     )
   }
 
-  // If not authenticated, the useAuth hook (or page routing) will redirect, 
-  // but we return null here to prevent rendering dashboard fragments
   if (!isAuthenticated) return null
+
+  if (isChatShell) {
+    return <div className="min-h-screen bg-bg-primary">{children}</div>
+  }
 
   return (
     <div className="relative min-h-screen bg-bg-primary">
       <Sidebar />
-      <div 
+      <div
         className={cn(
-          "flex flex-col min-h-screen transition-[margin] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+          "flex min-h-screen flex-col transition-[margin] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
           sidebarCollapsed ? "ml-[64px]" : "ml-[240px]"
         )}
       >
         <Topbar />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>
   )

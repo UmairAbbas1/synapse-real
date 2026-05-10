@@ -31,12 +31,12 @@ export function Topbar() {
         <Dropdown
           trigger={
             <button className="flex items-center focus:outline-none">
-              <Avatar initials={user?.displayName?.charAt(0) || "U"} className="h-8 w-8 cursor-pointer border-transparent hover:border-accent-primary" />
+              <Avatar initials={user?.display_name?.charAt(0) || "U"} className="h-8 w-8 cursor-pointer border-transparent hover:border-accent-primary" />
             </button>
           }
         >
           <div className="px-4 py-3 border-b border-border-subtle">
-            <p className="text-sm text-text-primary font-medium">{user?.displayName}</p>
+            <p className="text-sm text-text-primary font-medium">{user?.display_name}</p>
             <p className="text-xs text-text-tertiary truncate">{user?.email}</p>
           </div>
           <div className="py-1">

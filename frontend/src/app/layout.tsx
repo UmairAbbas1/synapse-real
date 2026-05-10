@@ -17,15 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-theme="dark">
-      <head>
-        <style>{`
-          :root {
-            --font-general-sans: 'General Sans', sans-serif;
-            --font-jetbrains-mono: 'JetBrains Mono', monospace;
-          }
-        `}</style>
-      </head>
-      <body className="antialiased min-h-screen bg-bg-primary text-text-primary">
+      <body className="antialiased min-h-screen bg-bg-primary text-text-primary font-sans">
         <Providers>
           <CommandPalette />
           {children}

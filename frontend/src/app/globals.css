@@ -20,6 +20,9 @@
 }
 
 :root {
+  --font-general-sans: "General Sans", sans-serif;
+  --font-jetbrains-mono: "JetBrains Mono", monospace;
+
   /* Backgrounds */
   --bg-primary: #0A0A0F;
   --bg-secondary: #12121A;

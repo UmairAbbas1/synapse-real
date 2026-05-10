@@ -1,39 +1,27 @@
-import { useEffect, useState } from 'react'
-import { useAuthStore } from '@/stores/authStore'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/store/auth-store"
 
 export function useAuth() {
-  const { user, accessToken, isAuthenticated, login, logout, refreshToken } = useAuthStore()
+  const { user, token, isAuthenticated, isHydrated, login, logout } = useAuthStore()
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    // Validate token on mount
-    const validateSession = async () => {
-      setIsLoading(true)
-      if (accessToken) {
-        try {
-          // Token is present, we could ping /api/v1/auth/me to verify
-          // If it fails, the api interceptor will call logout()
-        } catch (error) {
-          logout()
-        }
-      }
-      setIsLoading(false)
-    }
-
-    validateSession()
-  }, [accessToken, logout])
+    if (!isHydrated) return
+    setIsLoading(false)
+  }, [isHydrated])
 
   return {
     user,
+    token,
     isAuthenticated,
-    isLoading,
+    isLoading: isLoading || !isHydrated,
     login,
     logout: () => {
-      logout()
-      router.push('/login')
+      void logout().finally(() => {
+        router.push("/login")
+      })
     },
-    refreshToken,
   }
 }

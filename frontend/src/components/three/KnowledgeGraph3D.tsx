@@ -6,6 +6,7 @@ import { OrbitControls, Html } from "@react-three/drei"
 import * as THREE from "three"
 import { useQuery } from "@tanstack/react-query"
 import { get } from "@/lib/api"
+import { cn } from "@/lib/utils"
 
 interface GraphNode {
   id: string
@@ -44,6 +45,13 @@ const COLORS = {
   Document: "#E2E8F0", // White/light
   Project: "#FBBF24", // Amber
   Team: "#34D399", // Green
+}
+
+const LEGEND_SWATCH: Record<keyof typeof COLORS, string> = {
+  Person: "bg-accent-primary shadow-[0_0_8px_var(--accent-glow)]",
+  Document: "bg-text-primary shadow-[0_0_6px_rgba(238,238,240,0.35)]",
+  Project: "bg-status-warning shadow-[0_0_8px_rgba(251,191,36,0.45)]",
+  Team: "bg-status-success shadow-[0_0_8px_rgba(52,211,153,0.45)]",
 }
 
 function GraphScene({ data }: { data: GraphData }) {
@@ -150,9 +158,9 @@ export function KnowledgeGraph3D() {
       <div className="absolute bottom-6 left-6 bg-surface-1/80 backdrop-blur-md p-4 rounded-[8px] border border-border-strong">
         <h4 className="text-xs font-bold text-text-primary mb-2 uppercase tracking-wider">Legend</h4>
         <div className="space-y-2">
-          {Object.entries(COLORS).map(([label, color]) => (
+          {(Object.keys(COLORS) as Array<keyof typeof COLORS>).map((label) => (
             <div key={label} className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full shadow-[0_0_8px_currentColor]" style={{ color, backgroundColor: color }} />
+              <span className={cn("h-3 w-3 rounded-full", LEGEND_SWATCH[label])} />
               <span className="text-xs text-text-secondary">{label}</span>
             </div>
           ))}

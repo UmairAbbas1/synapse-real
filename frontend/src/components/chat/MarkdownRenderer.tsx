@@ -88,7 +88,7 @@ function CodeBlock({ code, language, className, ...rest }: { code: string; langu
           {isCopied ? <Check className="h-4 w-4 text-status-success" /> : <Copy className="h-4 w-4" />}
         </button>
       </div>
-      <div className="p-4 overflow-x-auto text-[#e2e8f0]">
+      <div className="p-4 overflow-x-auto text-text-primary">
         <code className={className} {...rest}>
           {code}
         </code>

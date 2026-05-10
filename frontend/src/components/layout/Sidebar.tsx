@@ -3,18 +3,33 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { MessageSquare, Clock, Settings, Network, Sun, Moon, PanelLeftClose, PanelLeft } from "lucide-react"
+import {
+  MessageSquare,
+  Clock,
+  Settings,
+  Network,
+  Sun,
+  Moon,
+  PanelLeftClose,
+  PanelLeft,
+  Database,
+  Users,
+  ScrollText,
+} from "lucide-react"
 import { useUIStore } from "@/stores/uiStore"
-import { useAuthStore } from "@/stores/authStore"
+import { useAuthStore } from "@/store/auth-store"
 import { Tooltip } from "@/components/ui/Tooltip"
 import { Avatar } from "@/components/ui/Avatar"
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { label: "Chat", href: "/chat", icon: MessageSquare, roles: ["USER", "ADMIN", "EXPERT"] },
-  { label: "History", href: "/history", icon: Clock, roles: ["USER", "ADMIN", "EXPERT"] },
-  { label: "Knowledge Graph", href: "/graph", icon: Network, roles: ["USER", "ADMIN", "EXPERT"] },
+  { label: "Chat", href: "/chat", icon: MessageSquare, roles: ["USER", "ADMIN", "EXPERT", "PM", "HR", "JUNIOR_DEV", "SENIOR_DEV"] },
+  { label: "History", href: "/history", icon: Clock, roles: ["USER", "ADMIN", "EXPERT", "PM", "HR", "JUNIOR_DEV", "SENIOR_DEV"] },
+  { label: "Knowledge Graph", href: "/graph", icon: Network, roles: ["USER", "ADMIN", "EXPERT", "PM", "HR", "JUNIOR_DEV", "SENIOR_DEV"] },
   { label: "Admin Dashboard", href: "/admin", icon: Settings, roles: ["ADMIN"] },
+  { label: "Sources", href: "/admin/sources", icon: Database, roles: ["ADMIN"] },
+  { label: "Users", href: "/admin/users", icon: Users, roles: ["ADMIN"] },
+  { label: "Audit", href: "/admin/audit", icon: ScrollText, roles: ["ADMIN"] },
 ]
 
 export function Sidebar() {
@@ -81,10 +96,10 @@ export function Sidebar() {
         </button>
 
         <div className="flex items-center">
-          <Avatar initials={user?.displayName?.charAt(0) || "U"} />
+          <Avatar initials={user?.display_name?.charAt(0) || "U"} />
           {!sidebarCollapsed && (
             <div className="ml-3 overflow-hidden">
-              <p className="truncate text-sm font-medium text-text-primary">{user?.displayName || "User"}</p>
+              <p className="truncate text-sm font-medium text-text-primary">{user?.display_name || "User"}</p>
               <p className="truncate text-xs text-text-tertiary">{user?.role || "USER"}</p>
             </div>
           )}
