@@ -1,5 +1,6 @@
-"""Auth Endpoints mapping connection structures transparently avoiding bottlenecks natively."""
+"""Auth endpoints."""
 
+import hashlib
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
@@ -39,11 +40,13 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db), auth_svc:
     
     access_token = auth_svc.create_access_token(str(user.id), role_name, permissions)
     refresh_token = auth_svc.create_refresh_token(str(user.id))
+    token_hash = hashlib.sha256(access_token.encode()).hexdigest()
     
     from app.config import settings
     
     session = UserSession(
         user_id=str(user.id),
+        token_hash=token_hash,
         refresh_token=refresh_token,
         expires_at=datetime.now(timezone.utc) + timedelta(days=7)
     )
