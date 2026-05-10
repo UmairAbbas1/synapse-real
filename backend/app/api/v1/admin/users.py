@@ -6,8 +6,8 @@ import uuid
 from datetime import datetime
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +16,7 @@ from app.core.auth import AuthService, hash_password
 from app.db.postgres import get_db_session as get_db
 from app.models.role import Role
 from app.models.user import User
-from app.schemas.auth import CurrentUser
+from app.schemas.auth import CurrentUser, _normalize_email
 from app.schemas.common import PageResponse
 
 logger = structlog.get_logger(__name__)
@@ -25,10 +25,15 @@ router = APIRouter()
 
 
 class CreateUserRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str = Field(..., min_length=8)
     display_name: str
     role_name: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        return _normalize_email(value)
 
 
 class UpdateUserRequest(BaseModel):
@@ -167,7 +172,7 @@ async def update_user(
     )
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response, response_model=None)
 async def delete_user(
     user_id: str,
     db: AsyncSession = Depends(get_db),
@@ -197,4 +202,3 @@ async def delete_user(
     user.soft_delete()
     await db.commit()
     await auth.revoke_all_sessions_for_user(user_id)
-

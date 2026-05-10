@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_auth_service, get_current_user
@@ -58,7 +58,7 @@ async def login(
     )
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, response_class=Response, response_model=None)
 async def logout(
     user: CurrentUser = Depends(get_current_user),
     auth: AuthService = Depends(get_auth_service),
@@ -78,7 +78,7 @@ async def me(
     return _user_public(row)
 
 
-@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT, response_class=Response, response_model=None)
 async def change_password(
     body: ChangePasswordRequest,
     user: CurrentUser = Depends(get_current_user),

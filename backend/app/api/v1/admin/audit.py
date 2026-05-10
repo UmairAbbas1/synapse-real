@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -100,7 +100,7 @@ async def get_audit_entry(
     )
 
 
-@router.delete("/gdpr/user/{email}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/gdpr/user/{email}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response, response_model=None)
 async def gdpr_erase_user(
     email: str,
     request: Request,
