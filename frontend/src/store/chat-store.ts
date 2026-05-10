@@ -170,5 +170,5 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 /** Thread list for sidebar */
 export function useChatThreads() {
-  return useChatStore((s) => s.sessions.map(({ id, title }) => ({ id, title })))
+  return useChatStore((s) => s.sessions)
 }

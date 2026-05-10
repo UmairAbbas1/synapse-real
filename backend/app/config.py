@@ -16,7 +16,7 @@ def _parse_cors_origins(value: Any) -> list[str]:
     if isinstance(value, str):
         raw = value.strip()
         if not raw:
-            return ["http://localhost:3000"]
+            return ["http://localhost:3000", "http://localhost:3001"]
         if raw.startswith("["):
             parsed = json.loads(raw)
             if not isinstance(parsed, list):
@@ -76,7 +76,7 @@ class Settings(BaseSettings):
     TOP_K_RESULTS: int = 5
 
     # CORS
-    CORS_ORIGINS: CORSOrigins = Field(default_factory=lambda: ["http://localhost:3000"])
+    CORS_ORIGINS: CORSOrigins = Field(default_factory=lambda: ["http://localhost:3000", "http://localhost:3001"])
 
     # Session (JWT + Redis session TTL)
     SESSION_EXPIRE_HOURS: int = 8

@@ -19,9 +19,18 @@ const SUGGESTIONS = [
 ]
 
 export function ChatContainer() {
-  const { messages, isLoading, sendQuery, newChat, selectSession, activeSessionId } = useChatStore()
-  const threads = useChatThreads()
-  const { user } = useAuthStore()
+  const messages = useChatStore((s) => s.messages)
+  const isLoading = useChatStore((s) => s.isLoading)
+  const sendQuery = useChatStore((s) => s.sendQuery)
+  const newChat = useChatStore((s) => s.newChat)
+  const selectSession = useChatStore((s) => s.selectSession)
+  const activeSessionId = useChatStore((s) => s.activeSessionId)
+  const sessions = useChatThreads()
+  const threads = React.useMemo(
+    () => sessions.map(({ id, title }) => ({ id, title })),
+    [sessions]
+  )
+  const user = useAuthStore((s) => s.user)
   const { logout } = useAuth()
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const [sidebarOpen, setSidebarOpen] = React.useState(true)

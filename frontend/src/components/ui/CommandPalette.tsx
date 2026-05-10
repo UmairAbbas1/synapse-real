@@ -15,7 +15,8 @@ export function CommandPalette() {
   const router = useRouter()
   const { theme, toggleTheme } = useUIStore()
   const { logout } = useAuth()
-  const { messages, clearChat } = useChatStore()
+  const messages = useChatStore((s) => s.messages)
+  const clearChat = useChatStore((s) => s.clearChat)
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
