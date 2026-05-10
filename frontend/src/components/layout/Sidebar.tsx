@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { label: "Chat", href: "/chat", icon: MessageSquare, roles: ["USER", "ADMIN", "EXPERT", "PM", "HR", "JUNIOR_DEV", "SENIOR_DEV"] },
   { label: "History", href: "/history", icon: Clock, roles: ["USER", "ADMIN", "EXPERT", "PM", "HR", "JUNIOR_DEV", "SENIOR_DEV"] },
-  { label: "Knowledge Graph", href: "/graph", icon: Network, roles: ["USER", "ADMIN", "EXPERT", "PM", "HR", "JUNIOR_DEV", "SENIOR_DEV"] },
+  { label: "Knowledge Graph", href: "/admin/graph", icon: Network, roles: ["USER", "ADMIN", "EXPERT", "PM", "HR", "JUNIOR_DEV", "SENIOR_DEV"] },
   { label: "Admin Dashboard", href: "/admin", icon: Settings, roles: ["ADMIN"] },
   { label: "Sources", href: "/admin/sources", icon: Database, roles: ["ADMIN"] },
   { label: "Users", href: "/admin/users", icon: Users, roles: ["ADMIN"] },

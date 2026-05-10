@@ -1,12 +1,11 @@
 "use client"
 
-import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
 import { get } from "@/lib/api"
 import { Card } from "@/components/ui/Card"
 import { SystemHealthCard, SystemHealth } from "@/components/admin/SystemHealthCard"
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
-import { Users, FileText, Database, Activity, Clock } from "lucide-react"
+import { Users, FileText, Database, Clock } from "lucide-react"
 
 interface DashboardStats {
   total_documents: number
@@ -31,10 +30,70 @@ const fallbackData: DashboardStats = {
   health: { postgres: "healthy", pgvector: "healthy", neo4j: "healthy", redis: "healthy", ollama: "healthy" }
 }
 
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+function toNumber(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback
+}
+
+function toTrend(value: unknown, fallback: { date: string; count: number }[]): { date: string; count: number }[] {
+  if (!Array.isArray(value)) return fallback
+  return value
+    .filter(isObject)
+    .map((item) => ({
+      date: String(item.date ?? ""),
+      count: toNumber(item.count, 0),
+    }))
+}
+
+function toHourlyTrend(value: unknown, fallback: { hour: string; count: number }[]): { hour: string; count: number }[] {
+  if (!Array.isArray(value)) return fallback
+  return value
+    .filter(isObject)
+    .map((item) => ({
+      hour: String(item.hour ?? ""),
+      count: toNumber(item.count, 0),
+    }))
+}
+
+function toHealth(value: unknown): SystemHealth {
+  if (!isObject(value)) return fallbackData.health
+  return {
+    postgres: typeof value.postgres === "string" ? value.postgres : fallbackData.health.postgres,
+    pgvector: typeof value.pgvector === "string" ? value.pgvector : fallbackData.health.pgvector,
+    neo4j: typeof value.neo4j === "string" ? value.neo4j : fallbackData.health.neo4j,
+    redis: typeof value.redis === "string" ? value.redis : fallbackData.health.redis,
+    ollama: typeof value.ollama === "string" ? value.ollama : fallbackData.health.ollama,
+  }
+}
+
+function normalizeDashboardStats(raw: unknown): DashboardStats {
+  if (!isObject(raw)) return fallbackData
+  return {
+    total_documents: toNumber(raw.total_documents, fallbackData.total_documents),
+    document_trend: toTrend(raw.document_trend, fallbackData.document_trend),
+    active_sources: toNumber(raw.active_sources, fallbackData.active_sources),
+    queries_today: toNumber(raw.queries_today, fallbackData.queries_today),
+    hourly_queries: toHourlyTrend(raw.hourly_queries, fallbackData.hourly_queries),
+    avg_response_time_ms: toNumber(raw.avg_response_time_ms, fallbackData.avg_response_time_ms),
+    active_users: toNumber(raw.active_users, fallbackData.active_users),
+    health: toHealth(raw.health),
+  }
+}
+
 export default function AdminDashboard() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['adminStats'],
-    queryFn: () => get<DashboardStats>('/admin/stats').catch(() => fallbackData),
+  const { data } = useQuery({
+    queryKey: ["adminStats"],
+    queryFn: async () => {
+      try {
+        const raw = await get<unknown>("/admin/stats")
+        return normalizeDashboardStats(raw)
+      } catch {
+        return fallbackData
+      }
+    },
     refetchInterval: 30000, // 30 seconds
     initialData: fallbackData, // Using fallback for immediate UI rendering during dev
   })
