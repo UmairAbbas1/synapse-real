@@ -1,14 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { usePathname } from "next/navigation"
-import { Bell, LogOut, User as UserIcon } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { Bell, LogOut, User as UserIcon, Settings } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { Avatar } from "@/components/ui/Avatar"
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown"
 
 export function Topbar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { user, logout } = useAuth()
 
   // Generate simple breadcrumbs from pathname
@@ -53,6 +54,17 @@ export function Topbar() {
                 <UserIcon className="mr-3 h-4 w-4" />
                 Account Settings
               </DropdownItem>
+              {user?.role === 'admin' && (
+                <>
+                  <DropdownItem 
+                    onClick={() => router.push('/admin')}
+                    className="flex items-center rounded-[8px] px-3 py-2 text-sm text-accent-primary hover:bg-accent-primary/10 transition-colors"
+                  >
+                    <Settings className="mr-3 h-4 w-4" />
+                    Admin Dashboard
+                  </DropdownItem>
+                </>
+              )}
               <div className="my-1 h-px bg-border-subtle" />
               <DropdownItem 
                 onClick={logout} 

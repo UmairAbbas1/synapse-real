@@ -34,8 +34,8 @@ export function QueryInput({ onSubmit, isLoading, disabled }: QueryInputProps) {
   const len = value.length
 
   return (
-    <div className="w-full bg-transparent px-6 py-3">
-      <div className="flex items-end gap-4">
+    <div className="w-full bg-transparent px-4 py-2">
+      <div className="flex items-center gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <textarea
             value={value}
@@ -45,16 +45,16 @@ export function QueryInput({ onSubmit, isLoading, disabled }: QueryInputProps) {
             }}
             onKeyDown={handleKeyDown}
             disabled={disabled || isLoading}
-            placeholder="Search knowledge or ask Synapse..."
+            placeholder="Message Synapse..."
             rows={lineCount}
-            className="max-h-64 min-h-[44px] w-full resize-none bg-transparent py-3 text-[15px] font-medium text-text-primary placeholder:text-text-tertiary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+            className="max-h-64 min-h-[44px] w-full resize-none bg-transparent py-3 text-[14px] font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all border-none"
           />
         </div>
 
-        <div className="flex items-center gap-3 pb-1.5">
+        <div className="flex items-center gap-3">
           <div className={cn(
             "text-[10px] font-mono tracking-tighter transition-all duration-300",
-            len > 3500 ? "text-error opacity-100" : "text-text-tertiary opacity-0 group-focus-within:opacity-100"
+            len > 3500 ? "text-error opacity-100" : "text-secondary opacity-0 group-focus-within:opacity-100"
           )}>
             {len}/4k
           </div>
@@ -63,17 +63,17 @@ export function QueryInput({ onSubmit, isLoading, disabled }: QueryInputProps) {
             onClick={submit}
             disabled={!value.trim() || isLoading || disabled}
             className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] transition-all duration-500 active:scale-90",
+              "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-all duration-300 active:scale-95",
               !value.trim() || isLoading || disabled
-                ? "bg-bg-hover text-text-tertiary"
-                : "bg-accent-primary text-white shadow-lg shadow-accent-primary/30 hover:shadow-accent-primary/50 hover:scale-105"
+                ? "bg-surface-variant text-on-surface-variant opacity-50"
+                : "bg-primary-container text-on-primary-container shadow-[0_0_15px_rgba(37,99,235,0.2)] hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:scale-105"
             )}
             title="Send Inquiry"
           >
             {isLoading ? (
-              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="h-4 w-4 border-2 border-on-primary-container border-t-transparent rounded-full animate-spin" />
             ) : (
-              <Send className="h-4.5 w-4.5" />
+              <Send className="h-5 w-5" />
             )}
           </button>
         </div>

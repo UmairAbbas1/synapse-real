@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { AnimatePresence, motion } from "framer-motion"
 import Link from "next/link"
-import { Menu, MessageSquare, Plus, LogOut, PanelLeftClose, PanelLeft } from "lucide-react"
+import { AnimatePresence, motion } from "framer-motion"
+import { Menu, MessageSquare, Plus, LogOut, PanelLeftClose, PanelLeft, ChatBubbleOutline } from "lucide-react"
 import { useChatStore, useChatThreads } from "@/store/chat-store"
 import { useAuthStore } from "@/store/auth-store"
 import { useAuth } from "@/lib/hooks/useAuth"
@@ -43,7 +43,7 @@ export function ChatContainer() {
   }, [messages, isLoading])
 
   return (
-    <div className="flex h-screen max-h-screen overflow-hidden bg-bg-primary font-sans selection:bg-accent-muted">
+    <div className="flex h-screen max-h-screen overflow-hidden bg-background font-body-md text-on-background selection:bg-primary-container/30">
       {/* Mobile overlay */}
       {mobileNav ? (
         <button
@@ -56,47 +56,63 @@ export function ChatContainer() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          "glass-effect border-r border-border-medium shadow-2xl md:relative md:shadow-none",
+          "fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col transition-all duration-300 ease-in-out",
+          "bg-surface/80 backdrop-blur-2xl border-r border-white/20 shadow-2xl md:relative md:shadow-none",
           mobileNav ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           !sidebarOpen && "md:w-[80px]"
         )}
       >
-        <div className="flex h-20 items-center justify-between px-6 border-b border-border-subtle/50">
+        <div className="flex h-20 items-center justify-between px-6 border-b border-outline-variant/20">
           {sidebarOpen ? (
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-accent-primary animate-pulse" />
-              <span className="text-lg font-bold tracking-tight text-text-primary uppercase">SYNAPSE</span>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-lg overflow-hidden border border-outline-variant bg-surface-container flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary">smart_toy</span>
+              </div>
+              <div>
+                <h2 className="font-headline-md text-[18px] text-primary leading-tight font-semibold">Synapse</h2>
+                <p className="font-label-sm text-[11px] text-secondary tracking-widest uppercase">Enterprise</p>
+              </div>
             </div>
           ) : (
-            <div className="mx-auto h-2 w-2 rounded-full bg-accent-primary animate-pulse" />
+            <div className="mx-auto w-8 h-8 rounded-lg overflow-hidden border border-outline-variant bg-surface-container flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary text-sm">smart_toy</span>
+            </div>
           )}
           <button
             type="button"
-            className="rounded-[8px] p-2 text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-all duration-300"
+            className="rounded-lg p-2 text-on-surface-variant hover:bg-white/5 transition-colors"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             {sidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
           </button>
         </div>
 
-        <div className="p-4">
+        <div className="p-4 space-y-2">
           <button
             type="button"
             onClick={() => {
               newChat()
               setMobileNav(false)
             }}
-            className="group relative flex w-full items-center justify-center gap-2 rounded-[12px] bg-accent-primary py-3.5 text-sm font-bold text-white transition-all duration-300 hover:bg-accent-hover hover:shadow-[0_0_20px_var(--accent-glow)] active:scale-95"
+            className="group relative flex w-full items-center justify-center gap-2 rounded-lg bg-primary-container py-3 text-sm font-semibold text-on-primary-container transition-all hover:brightness-110 active:scale-95 shadow-[0_0_15px_rgba(0,229,204,0.15)]"
           >
             <Plus className="h-4 w-4" />
             {sidebarOpen ? "New Dialogue" : null}
-            <div className="absolute inset-0 rounded-[12px] bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
+          
+          {user?.role === 'admin' && (
+            <Link
+              href="/admin"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-outline-variant/30 bg-surface py-3 text-sm font-semibold text-on-surface transition-all hover:border-primary hover:text-primary active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+              {sidebarOpen ? "Admin Console" : null}
+            </Link>
+          )}
         </div>
 
         <div className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">
-          <div className={cn("text-[10px] font-bold text-text-tertiary uppercase tracking-widest mb-2 px-2", !sidebarOpen && "text-center")}>
+          <div className={cn("font-label-sm text-[11px] text-secondary uppercase tracking-widest mb-2 px-2", !sidebarOpen && "text-center")}>
             {sidebarOpen ? "Recent Threads" : "···"}
           </div>
           {threads.map((t) => (
@@ -108,27 +124,27 @@ export function ChatContainer() {
                 setMobileNav(false)
               }}
               className={cn(
-                "group flex w-full items-center gap-3 rounded-[10px] px-3 py-3 text-left text-sm transition-all duration-300",
+                "group flex w-full items-center gap-4 p-3 rounded-lg transition-all duration-300 ease-in-out",
                 activeSessionId === t.id
-                  ? "bg-accent-muted text-accent-primary ring-1 ring-accent-primary/20"
-                  : "text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+                  ? "bg-primary-container/30 text-on-primary-container font-semibold"
+                  : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
               )}
             >
-              <MessageSquare className={cn("h-4 w-4 shrink-0 transition-transform group-hover:scale-110", activeSessionId === t.id ? "text-accent-primary" : "text-text-tertiary")} />
-              {sidebarOpen ? <span className="truncate font-medium">{t.title}</span> : null}
+              <MessageSquare className={cn("h-4 w-4 shrink-0 transition-transform group-hover:scale-110")} />
+              {sidebarOpen ? <span className="truncate font-body-md text-[14px]">{t.title}</span> : null}
             </button>
           ))}
         </div>
 
-        <div className="border-t border-border-subtle/50 p-6 bg-white/5 shadow-inner">
+        <div className="border-t border-outline-variant/20 p-6 bg-white/5">
           <div className={cn("flex items-center gap-3", !sidebarOpen && "justify-center")}>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-primary border-2 border-border-medium font-mono text-sm font-bold text-accent-primary shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface-container font-mono text-sm font-bold text-primary">
               {user?.display_name?.charAt(0) ?? "U"}
             </div>
             {sidebarOpen ? (
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-text-primary leading-tight">{user?.display_name}</p>
-                <p className="truncate text-[10px] font-mono text-text-tertiary uppercase mt-0.5 tracking-wider">{user?.role}</p>
+                <p className="truncate text-[14px] font-semibold text-on-surface leading-tight">{user?.display_name}</p>
+                <p className="truncate text-[11px] font-mono text-secondary uppercase mt-0.5 tracking-wider">{user?.role}</p>
               </div>
             ) : null}
           </div>
@@ -136,46 +152,44 @@ export function ChatContainer() {
             type="button"
             onClick={() => logout()}
             className={cn(
-              "group mt-4 flex w-full items-center justify-center gap-2 rounded-[10px] border border-border-medium py-2.5 text-xs font-bold text-text-secondary transition-all duration-300 hover:border-error hover:text-error hover:bg-error/5 active:scale-95",
+              "group mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-outline-variant/50 py-2.5 text-xs font-semibold text-secondary transition-all hover:border-error hover:text-error hover:bg-error/5 active:scale-95",
               !sidebarOpen && "px-0"
             )}
           >
-            <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-            {sidebarOpen ? "Terminate Session" : null}
+            <LogOut className="h-4 w-4" />
+            {sidebarOpen ? "Sign Out" : null}
           </button>
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col bg-white">
-        <header className="flex h-20 items-center justify-between border-b border-border-medium px-8 md:hidden">
+      <div className="flex min-w-0 flex-1 flex-col relative bg-background">
+        <header className="flex h-16 items-center justify-between border-b border-outline-variant/20 px-6 bg-surface/80 backdrop-blur-xl md:hidden sticky top-0 z-40">
           <button
             type="button"
-            className="rounded-[10px] p-2.5 text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-all duration-300"
+            className="rounded-lg p-2 text-on-surface hover:bg-primary/10 transition-colors"
             onClick={() => setMobileNav(true)}
           >
             <Menu className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-accent-primary animate-pulse" />
-            <span className="font-bold text-text-primary uppercase tracking-tight">SYNAPSE</span>
+            <span className="font-headline-md text-[18px] font-semibold text-on-surface">Synapse</span>
           </div>
-          <div className="w-10" /> {/* Spacer */}
+          <div className="w-10" />
         </header>
 
-        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-6 py-8 sm:px-12 scroll-smooth">
-          <div className="mx-auto max-w-4xl pb-32">
+        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-8 sm:px-12 scroll-smooth">
+          <div className="mx-auto max-w-[800px] pb-40">
             {messages.length === 0 ? (
               <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center animate-slide-up">
-                <div className="relative group mb-10">
-                  <div className="absolute inset-0 bg-accent-primary/20 blur-2xl rounded-full scale-150 group-hover:scale-175 transition-transform duration-1000" />
-                  <div className="relative flex h-24 w-24 items-center justify-center rounded-[20px] bg-white border border-border-medium shadow-2xl transition-transform duration-700 group-hover:rotate-12">
-                    <span className="font-sans text-5xl font-black text-accent-primary">S</span>
+                <div className="relative group mb-8">
+                  <div className="w-20 h-20 bg-primary-container rounded-full flex items-center justify-center shadow-lg transition-transform duration-700 group-hover:rotate-12">
+                     <span className="material-symbols-outlined text-[40px] text-on-primary-container">smart_toy</span>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-3xl font-bold text-text-primary tracking-tighter">How can I assist you, {user?.display_name?.split(' ')[0]}?</h2>
-                  <p className="max-w-md text-base text-text-secondary leading-relaxed">
-                    Grounding intelligence in your local environment. Select a prompt below or start a new inquiry.
+                  <h2 className="text-[24px] font-semibold text-on-surface tracking-tight">How can I assist you, {user?.display_name?.split(' ')[0]}?</h2>
+                  <p className="max-w-md text-[14px] text-secondary leading-relaxed">
+                    Grounding intelligence in your enterprise graph.
                   </p>
                 </div>
                 <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
@@ -184,16 +198,16 @@ export function ChatContainer() {
                       key={q}
                       type="button"
                       onClick={() => void sendQuery(q)}
-                      className="group flex items-center justify-between rounded-[16px] border border-border-medium bg-white p-5 text-left transition-all duration-300 hover:border-accent-primary hover:shadow-xl hover:-translate-y-1 active:scale-95 shadow-sm"
+                      className="group flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface p-5 text-left transition-all duration-300 hover:border-primary hover:shadow-md active:scale-95"
                     >
-                      <span className="text-sm font-semibold text-text-primary group-hover:text-accent-primary transition-colors">{q}</span>
-                      <Plus className="h-4 w-4 text-text-tertiary group-hover:text-accent-primary transition-colors" />
+                      <span className="text-[14px] font-semibold text-on-surface group-hover:text-primary transition-colors">{q}</span>
+                      <Plus className="h-4 w-4 text-secondary group-hover:text-primary transition-colors" />
                     </button>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="space-y-10">
+              <div className="space-y-8">
                 <AnimatePresence initial={false}>
                   {messages.map((msg) => (
                     <motion.div
@@ -210,16 +224,19 @@ export function ChatContainer() {
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex gap-4 items-start"
+                    className="flex flex-col gap-4"
                   >
-                    <div className="h-8 w-8 rounded-full bg-accent-muted flex items-center justify-center shrink-0">
-                      <div className="h-4 w-4 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />
-                    </div>
-                    <div className="flex gap-1 items-center mt-3">
-                      <div className="h-1.5 w-1.5 rounded-full bg-accent-primary/40 animate-bounce [animation-delay:-0.3s]" />
-                      <div className="h-1.5 w-1.5 rounded-full bg-accent-primary/60 animate-bounce [animation-delay:-0.15s]" />
-                      <div className="h-1.5 w-1.5 rounded-full bg-accent-primary animate-bounce" />
-                    </div>
+                     <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-primary-container rounded-full flex items-center justify-center">
+                          <span className="material-symbols-outlined text-[14px] text-on-primary-container">smart_toy</span>
+                        </div>
+                        <span className="font-label-sm text-[12px] font-semibold text-primary">Synapse</span>
+                      </div>
+                      <div className="bg-surface-container-low rounded-xl p-5 border border-outline-variant/20 w-fit flex gap-1 items-center">
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40 animate-bounce [animation-delay:-0.3s]" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.15s]" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
+                      </div>
                   </motion.div>
                 )}
               </div>
@@ -227,13 +244,13 @@ export function ChatContainer() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 pointer-events-none">
-          <div className="mx-auto max-w-4xl pointer-events-auto">
-            <div className="glass-effect rounded-[20px] shadow-2xl p-1 border-border-strong overflow-hidden transition-all duration-300 hover:shadow-accent-glow/20">
+        <div className="absolute bottom-0 left-0 right-0 w-full px-margin-mobile pb-8 bg-gradient-to-t from-background via-background/90 to-transparent pt-10">
+          <div className="max-w-[800px] mx-auto pointer-events-auto">
+            <div className="relative bg-surface/80 backdrop-blur-[20px] rounded-xl border border-outline-variant/40 shadow-lg p-2 transition-all flex">
                <QueryInput onSubmit={(q) => void sendQuery(q)} isLoading={isLoading} />
             </div>
-            <p className="mt-4 text-center text-[10px] text-text-tertiary uppercase tracking-[0.2em] font-mono">
-              Synapse AI may hallucinate · Local Deployment
+            <p className="mt-4 text-center font-label-sm text-[11px] text-secondary uppercase tracking-widest">
+              Synapse Intelligence · Local Deployment
             </p>
           </div>
         </div>

@@ -19,70 +19,10 @@
   font-style: normal;
 }
 
-:root {
-  --font-general-sans: "General Sans", sans-serif;
-  --font-jetbrains-mono: "JetBrains Mono", monospace;
-
-  /* Apple-inspired Light Palette */
-  --bg-primary: #F5F5F7;
-  --bg-secondary: #FFFFFF;
-  --bg-elevated: #FFFFFF;
-  --bg-hover: #F2F2F7;
-  
-  /* Surfaces with Tonal Layering */
-  --surface-1: #FFFFFF;
-  --surface-2: #FBFBFD;
-  --surface-3: #F2F2F7;
-  
-  /* Text: High Contrast & Legibility */
-  --text-primary: #1D1D1F;
-  --text-secondary: #86868B;
-  --text-tertiary: #A1A1A6;
-  
-  /* Accent: Synapse Cyan (#00E5CC) */
-  --accent-primary: #00BFA5; /* Slightly darkened for light mode legibility */
-  --accent-hover: #00E5CC;
-  --accent-muted: rgba(0, 191, 165, 0.08);
-  --accent-glow: rgba(0, 229, 204, 0.25);
-  
-  /* Semantic */
-  --success: #34D399;
-  --warning: #F59E0B;
-  --error: #FF3B30; /* Apple Red */
-  --info: #007AFF; /* Apple Blue */
-  
-  /* Borders: Ultra Subtle */
-  --border-subtle: rgba(0, 0, 0, 0.04);
-  --border-medium: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.12);
-  
-  /* Glassmorphism: Premium Frosted Glass */
-  --glass-bg: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --glass-blur: 24px;
-
-  /* Depth Effects */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.02);
-  --shadow-lg: 0 20px 40px rgba(0,0,0,0.04), 0 1px 4px rgba(0,0,0,0.02);
-}
-
-/* Dark mode override (optional, but keeping it for flexibility) */
-[data-theme="dark"] {
-  --bg-primary: #0A0A0F;
-  --bg-secondary: #12121A;
-  --bg-elevated: #1A1A26;
-  --text-primary: #EEEEF0;
-  --text-secondary: #9898A6;
-  --accent-primary: #00E5CC;
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --glass-bg: rgba(18, 18, 26, 0.8);
-}
-
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: var(--font-general-sans);
+  background-color: theme('colors.background');
+  color: theme('colors.on-background');
+  font-family: theme('fontFamily.body-md');
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -122,28 +62,7 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
 }
 
-/* Glassmorphism Utility */
-.glass-effect {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-}
-
-/* Apple-style Buttons */
-.btn-premium {
-  @apply relative px-5 py-2.5 rounded-[10px] font-medium transition-all duration-300 ease-out active:scale-95;
-}
-
-.btn-premium-primary {
-  @apply btn-premium bg-accent-primary text-white shadow-sm hover:bg-accent-hover hover:shadow-[0_0_20px_var(--accent-glow)];
-}
-
-.btn-premium-secondary {
-  @apply btn-premium bg-white text-text-primary border border-border-medium hover:bg-bg-hover;
-}
-
-/* 3D Card Hover Effect */
-.card-3d {
-  @apply transition-transform duration-500 ease-out hover:-translate-y-1 hover:shadow-lg;
+/* Utility classes for icons */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }

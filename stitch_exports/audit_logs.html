@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Synapse - Audit Logs</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#7d2d00",
+                        "secondary-container": "#d0e1fb",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-background": "#131b2e",
+                        "outline-variant": "#c3c6d7",
+                        "on-tertiary-container": "#ffede6",
+                        "inverse-primary": "#b4c5ff",
+                        "inverse-on-surface": "#eef0ff",
+                        "on-primary-fixed": "#00174b",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-secondary-fixed": "#0b1c30",
+                        "surface-tint": "#0053db",
+                        "on-secondary-container": "#54647a",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f2f3ff",
+                        "tertiary-container": "#bc4800",
+                        "on-tertiary-fixed": "#360f00",
+                        "tertiary": "#943700",
+                        "inverse-surface": "#283044",
+                        "primary-container": "#2563eb",
+                        "background": "#faf8ff",
+                        "on-primary-container": "#eeefff",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#dae2fd",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#ffdbcd",
+                        "surface-dim": "#d2d9f4",
+                        "on-surface": "#131b2e",
+                        "on-surface-variant": "#434655",
+                        "surface-variant": "#dae2fd",
+                        "error": "#ba1a1a",
+                        "secondary": "#505f76",
+                        "outline": "#737686",
+                        "on-secondary": "#ffffff",
+                        "primary": "#004ac6",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#eaedff",
+                        "surface-bright": "#faf8ff",
+                        "primary-fixed": "#dbe1ff",
+                        "surface": "#faf8ff",
+                        "surface-container-high": "#e2e7ff",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "base": "4px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "gutter": "16px",
+                        "margin-desktop": "24px",
+                        "margin-mobile": "16px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "label-sm": ["JetBrains Mono"],
+                        "mono-md": ["JetBrains Mono"],
+                        "headline-lg": ["Geist"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400" }],
+                        "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "mono-md": ["13px", { "lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-surface-container-lowest text-primary font-headline-md text-headline-md font-headline-lg text-headline-lg tracking-tight font-semibold text-on-surface border-b border-outline-variant shadow-sm fixed top-0 left-0 w-full z-40 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16">
+<button aria-label="menu" class="flex items-center justify-center p-sm hover:bg-surface-container-low transition-colors rounded-full active:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-on-surface-variant">menu</span>
+</button>
+<div class="flex-1 text-center font-headline-lg text-headline-lg tracking-tight font-semibold text-on-surface">Synapse</div>
+<button aria-label="User Profile Avatar" class="flex items-center justify-center w-8 h-8 rounded-full overflow-hidden border border-outline-variant active:opacity-70 transition-opacity bg-surface-variant">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A small circular user avatar showing a professional headshot of a person against a neutral background. High-quality corporate photography style, well-lit, fitting a modern SaaS dashboard interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBupKSjiNF77SVo2w_7Qb_J7F1XgyduFAt0RKIlbgjCbv3UKcfHYj4KOyHEERTD8LZqZPKj87d4cHySdQ5joBJgEQl2uazIZCDWm3HrgXm2sAxtIMKx-sntxWjauYR-u53UKb54XveOq8oMtsUBPS3VmacYtzValtSCli6u-dJ7aE6SuUn0ZwVYifZoa_9sm_zHcVFznEYljiNKATzKKKo0W9Su11Pw7M4KHtdOBB37vU0rDOpZ0K6OINNRIX80gS090j1Pd4t17xU"/>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 pt-16 pb-24 flex flex-col w-full max-w-[100vw] overflow-hidden">
+<!-- Page Header Area -->
+<div class="px-margin-mobile py-lg flex flex-col gap-sm border-b border-outline-variant bg-surface-container-lowest">
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Audit Logs</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">System access and resource modification history.</p>
+</div>
+<!-- Utility Bar -->
+<div class="px-margin-mobile py-sm flex items-center justify-between bg-surface-container border-b border-outline-variant">
+<div class="flex items-center gap-xs bg-surface-container-lowest border border-outline-variant rounded px-sm py-1">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">filter_list</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">All Events</span>
+</div>
+<button class="flex items-center gap-xs text-primary hover:bg-surface-container-low px-sm py-1 rounded transition-colors">
+<span class="material-symbols-outlined text-[16px]">download</span>
+<span class="font-label-sm text-label-sm uppercase">Export</span>
+</button>
+</div>
+<!-- Ultimate Enterprise Data Table Container (Scrollable) -->
+<div class="w-full overflow-x-auto bg-surface-container-lowest flex-1 relative">
+<table class="w-full min-w-[600px] text-left border-collapse whitespace-nowrap">
+<thead class="bg-surface-container-low font-label-sm text-label-sm text-on-surface-variant sticky top-0 z-10 border-b border-outline-variant">
+<tr>
+<th class="px-md py-sm font-normal uppercase">TIMESTAMP</th>
+<th class="px-md py-sm font-normal uppercase">OPERATOR</th>
+<th class="px-md py-sm font-normal uppercase">ACTION_TYPE</th>
+<th class="px-md py-sm font-normal uppercase">TARGET_RESOURCE</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<!-- Row 1 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-3 font-mono-md text-mono-md text-on-surface-variant">2023-10-27T08:14:22Z</td>
+<td class="px-md py-3">
+<div class="flex items-center gap-sm">
+<img alt="Avatar" class="w-6 h-6 rounded-full border border-outline-variant" data-alt="A tiny circular avatar image of a user's face, intended for a data table row to indicate the operator of an action. Minimalist corporate portrait." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMttCvHxOJlyba923_6_EMbwyzye96YEwBKXfVx3Wrhrqbm8EeW2O6gjLxRwEbpeA7P-ClWFAw2pdfG5pQGq1q4MgYkTmHTQz7yHW8EwzyNbEg_fNDs2GQSOuYsxkjkVRonbOp8NTE_qdKtcs4pklWCodqzEop4J1Gct7PndeB1zICoRnVei44cHMqqdLX-yb-7Wqwz4scHYI86akUq7ZJXqdVI6qWMetff2qgVOfI5QrwiDd5vH0DEYdYyr-R74CnIqGU_8G1nns"/>
+<span>a.chen@synapse.io</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm uppercase tracking-wider">
+                                EXECUTE_QUERY
+                            </span>
+</td>
+<td class="px-md py-3 font-mono-md text-mono-md text-secondary">res_9481b_alpha</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-3 font-mono-md text-mono-md text-on-surface-variant">2023-10-27T08:12:05Z</td>
+<td class="px-md py-3">
+<div class="flex items-center gap-sm">
+<img alt="Avatar" class="w-6 h-6 rounded-full border border-outline-variant" data-alt="Small corporate user avatar in a circular frame, showing a professional headshot, used in an enterprise table row." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhhPFyqaXc6VCxdpfsHVRyYUi3iHBqwjCZFt2HZ64BPYRAkNEupYNomWiKarHtYKKvlcvOW_ktbe95JDGj4UVRPNmUwdEgYOWNNK3_dzFKMF3pbEMgEXJ8ooqKRDyGwoV8AYTq-8Gu_68aQgdKZPfY7J_7061Nu10yUA6BQzZY1KTtL76j-pwPUXoEvYztABjjvLIaZ_jIEC49nx7HDPcG1ulo9eKHyNSudQL9G1rS0uPm5oOKTCa4qRe9wxB5FaZktT1CNn8KSZg"/>
+<span>sys_admin_bot</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm uppercase tracking-wider">
+                                READ_DOCUMENT
+                            </span>
+</td>
+<td class="px-md py-3 font-mono-md text-mono-md text-secondary">doc_audit_q3_final</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-3 font-mono-md text-mono-md text-on-surface-variant">2023-10-27T08:09:41Z</td>
+<td class="px-md py-3">
+<div class="flex items-center gap-sm">
+<img alt="Avatar" class="w-6 h-6 rounded-full border border-outline-variant" data-alt="Tiny professional headshot avatar for a data table indicating user identity, clear lighting, neutral background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoB784EM5bjyFk8Zh1ISf6dYGx_QPneodD2tJWwQ-2AKkEDgSMhU7VABYCSp0NpT1pHD6eiUsg4f2UZ7zPtpjBO3RmiA5KMmzy0lbAzMGgaIR6_cPyN8oxZ_3VRjHRgJQxQFGU0ovHNBzHPGX3hVJxXXuZj4U17jsHa05wJkmys5g8bed1l5HJeJgJeGr9c89G_690jgIDnRvjuxWg60s8vr-RTn_5LaW5iQ9VcGmOCEdqont2aGQVfMpgVi1RPAO-HX4w6uks46o"/>
+<span>m.davis@synapse.io</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm uppercase tracking-wider">
+                                DELETE_RECORD
+                            </span>
+</td>
+<td class="px-md py-3 font-mono-md text-mono-md text-secondary">rec_usr_7729_del</td>
+</tr>
+<!-- Row 4 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-3 font-mono-md text-mono-md text-on-surface-variant">2023-10-27T07:55:10Z</td>
+<td class="px-md py-3">
+<div class="flex items-center gap-sm">
+<img alt="Avatar" class="w-6 h-6 rounded-full border border-outline-variant" data-alt="A small circular user avatar showing a professional headshot of a person against a neutral background. High-quality corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkDB5q2UZqjuUvoY_1Bh2QZb9sgMo8Ne9W7Z0-P4CtP_l1m879ZAR_0rCYuT46K1VwyiXnODraUVJCv8cIuU9MWAXAELTmk9D7HFNMdiXgeOND8GLWVSDn9JHKLrpz3UbSyWpb-Qpu9F8jFRtT_Ppzxhwf3g_ls4MgAeVVjiB83Ybm4VNNi235YIJ6fyXK4r7BIha2h4bJzBnWAY6WClYIVZP_YHUGMjSuxVt0awNm13erZHqNKEjbe5DsvQ52SnhTiqTvh1G2yZQ"/>
+<span>l.zhang@synapse.io</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm uppercase tracking-wider">
+                                EXECUTE_QUERY
+                            </span>
+</td>
+<td class="px-md py-3 font-mono-md text-mono-md text-secondary">res_pool_omega_2</td>
+</tr>
+<!-- Row 5 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-3 font-mono-md text-mono-md text-on-surface-variant">2023-10-27T07:42:01Z</td>
+<td class="px-md py-3">
+<div class="flex items-center gap-sm">
+<div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-label-sm text-[10px]">API</div>
+<span>ext_service_v2</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm uppercase tracking-wider">
+                                UPDATE_CONFIG
+                            </span>
+</td>
+<td class="px-md py-3 font-mono-md text-mono-md text-secondary">cfg_net_route_table</td>
+</tr>
+</tbody>
+</table>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface-container-lowest border-t border-outline-variant shadow-sm fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile py-base md:hidden">
+<!-- Search (Inactive) -->
+<button aria-label="Search" class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/50 scale-95 active:scale-90 transition-transform py-1 px-2 rounded-lg">
+<span class="material-symbols-outlined mb-1">search</span>
+<span class="font-label-sm text-label-sm">Search</span>
+</button>
+<!-- Analytics (Active - mapped to Audit Logs intent) -->
+<button aria-label="Analytics" class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-label-sm text-label-sm">Analytics</span>
+</button>
+<!-- Notifications (Inactive) -->
+<button aria-label="Notifications" class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/50 scale-95 active:scale-90 transition-transform py-1 px-2 rounded-lg">
+<span class="material-symbols-outlined mb-1">notifications</span>
+<span class="font-label-sm text-label-sm">Notifications</span>
+</button>
+</nav>
+</body></html>

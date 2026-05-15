@@ -1,0 +1,6 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <path d="M10 30L25 15L40 30L25 45L10 30Z" fill="#1E293B" />
+  <path d="M30 20L45 5L60 20L45 35L30 20Z" fill="#2563EB" />
+  <path d="M30 40L45 25L60 40L45 55L30 40Z" fill="#0F172A" />
+  <text x="75" y="38" font-family="Inter, sans-serif" font-weight="800" font-size="22" letter-spacing="0.1em" fill="#0F172A">SYNAPSE</text>
+</svg>

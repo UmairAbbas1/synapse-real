@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#5c5f60",
+                        "secondary-container": "#e1e3e4",
+                        "outline": "#6b7a76",
+                        "inverse-on-surface": "#f0f1f1",
+                        "surface-dim": "#dadada",
+                        "on-primary-container": "#006256",
+                        "on-secondary-fixed-variant": "#454748",
+                        "outline-variant": "#b9cac5",
+                        "surface-container-low": "#f3f3f4",
+                        "tertiary-fixed": "#ffdea9",
+                        "on-tertiary-fixed": "#271900",
+                        "primary-fixed": "#41fce2",
+                        "primary": "#006b5e",
+                        "primary-fixed-dim": "#00dfc6",
+                        "surface-tint": "#006b5e",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#5e4100",
+                        "tertiary-container": "#ffc24d",
+                        "tertiary": "#7d5800",
+                        "on-secondary": "#ffffff",
+                        "background": "#f9f9f9",
+                        "on-primary-fixed": "#00201b",
+                        "on-error": "#ffffff",
+                        "surface-container-highest": "#e2e2e2",
+                        "surface": "#f9f9f9",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#005047",
+                        "primary-container": "#00e5cc",
+                        "secondary-fixed": "#e1e3e4",
+                        "on-surface": "#1a1c1c",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#c5c7c8",
+                        "surface-container": "#eeeeee",
+                        "tertiary-fixed-dim": "#f9bc48",
+                        "on-background": "#1a1c1c",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e8e8e8",
+                        "on-secondary-container": "#626566",
+                        "inverse-primary": "#00dfc6",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2f3131",
+                        "surface-variant": "#e2e2e2",
+                        "on-surface-variant": "#3b4a46",
+                        "on-tertiary-container": "#725000",
+                        "surface-bright": "#f9f9f9",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#191c1d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "20px",
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "container-max": "1280px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Hanken Grotesk"],
+                        "label-sm": ["JetBrains Mono"],
+                        "code-md": ["JetBrains Mono"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "code-md": ["14px", {"lineHeight": "1.7", "fontWeight": "400"}],
+                        "headline-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid #E5E5E5;
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+        }
+        .cyan-glow {
+            box-shadow: 0 0 20px rgba(0, 229, 204, 0.15);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body-md text-on-surface selection:bg-primary-container/30">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl border-b border-white/10 dark:border-outline-variant/10 shadow-sm flex items-center justify-between px-margin-mobile h-16">
+<div class="flex items-center gap-4">
+<button class="hover:bg-primary/10 transition-colors active:scale-95 duration-200 p-2 rounded-full">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-semibold text-on-surface dark:text-inverse-on-surface">Synapse AI</h1>
+</div>
+<div class="flex items-center gap-2">
+<img alt="User Profile" class="w-10 h-10 rounded-full border border-primary/20" data-alt="A high-quality studio portrait of a professional individual with a friendly expression. The lighting is soft and directional, creating a clean and modern corporate aesthetic. The background is a minimalist, out-of-focus tech environment with subtle cool-toned gradients, aligning with a high-end AI software brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJzFUR3kY2wtJaV9OyXx_Fsr_dia7x2JVslyjfv-zfsalBmtP4PkMuffyUoXzv_OzC55_mHxgaSIVMwBtFt67qKSGzFFO7M8XFuQns-ALos7IL8yJCOrHelsDt2RziUzMeIhxanWXbkLPspZB_VCSIRdSWDJlLmmcDvYFbQV7hqHxwWTVJixv1niBTmRd8RLatfTggvoNXWPCtBk_EatDY-_PCUKF2vDFQoTgP6kq18HCjdXC854iCWiToHUor8YbnzMhsI6pYhD4"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-32 px-margin-mobile max-w-lg mx-auto space-y-gutter">
+<!-- Welcome Section -->
+<section class="space-y-1">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Operational Overview</span>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Analytics</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Real-time performance metrics for Synapse Pro.</p>
+</section>
+<!-- Bento Grid: Key Metrics -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Metric Card 1 -->
+<div class="glass-panel p-4 rounded-xl flex flex-col justify-between h-32 border-t-white/50">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary-container bg-primary/5 p-1 rounded-lg">token</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">+12%</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md font-bold">1.2M</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase">Tokens</div>
+</div>
+</div>
+<!-- Metric Card 2 -->
+<div class="glass-panel p-4 rounded-xl flex flex-col justify-between h-32 border-t-white/50">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary-container bg-primary/5 p-1 rounded-lg">speed</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-primary">-4ms</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md font-bold">142ms</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase">Latency</div>
+</div>
+</div>
+</div>
+<!-- Token Usage: Line Chart Visual -->
+<section class="glass-panel p-6 rounded-xl space-y-6">
+<div class="flex justify-between items-end">
+<div>
+<h3 class="font-headline-md text-headline-md">Token Usage</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Last 7 days active volume</p>
+</div>
+<div class="text-right">
+<span class="font-code-md text-code-md text-primary font-bold">94.2k avg</span>
+</div>
+</div>
+<!-- Mock Line Chart -->
+<div class="h-40 w-full relative flex items-end justify-between px-2">
+<div class="absolute inset-0 flex flex-col justify-between py-2 border-l border-outline-variant/30">
+<div class="w-full border-t border-outline-variant/10"></div>
+<div class="w-full border-t border-outline-variant/10"></div>
+<div class="w-full border-t border-outline-variant/10"></div>
+</div>
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 300 100">
+<path class="drop-shadow-[0_0_8px_rgba(0,229,204,0.4)]" d="M0,80 Q25,70 50,75 T100,40 T150,55 T200,20 T250,45 T300,30" fill="none" stroke="#00E5CC" stroke-width="2.5"></path>
+<path d="M0,80 Q25,70 50,75 T100,40 T150,55 T200,20 T250,45 T300,30 L300,100 L0,100 Z" fill="url(#cyan-grad)" opacity="0.1"></path>
+<defs>
+<lineargradient id="cyan-grad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#00E5CC"></stop>
+<stop offset="100%" stop-color="transparent"></stop>
+</lineargradient>
+</defs>
+</svg>
+<div class="h-1 w-1 bg-primary-container rounded-full ring-4 ring-primary-container/20 absolute left-[33%] top-[40%]"></div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant/60 pt-2">
+<span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+</div>
+</section>
+<!-- Response Times: Bar Chart Visual -->
+<section class="glass-panel p-6 rounded-xl space-y-6 cyan-glow">
+<div class="flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md">Response Times</h3>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">more_vert</span>
+</div>
+<div class="flex items-end justify-between h-32 gap-3 px-2">
+<div class="w-full bg-secondary-container rounded-t-sm h-[60%] transition-all hover:bg-primary-container duration-300"></div>
+<div class="w-full bg-secondary-container rounded-t-sm h-[85%] transition-all hover:bg-primary-container duration-300"></div>
+<div class="w-full bg-primary-container rounded-t-sm h-[100%]"></div>
+<div class="w-full bg-secondary-container rounded-t-sm h-[45%] transition-all hover:bg-primary-container duration-300"></div>
+<div class="w-full bg-secondary-container rounded-t-sm h-[70%] transition-all hover:bg-primary-container duration-300"></div>
+<div class="w-full bg-secondary-container rounded-t-sm h-[30%] transition-all hover:bg-primary-container duration-300"></div>
+</div>
+<div class="space-y-4 pt-4 border-t border-outline-variant/20">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary-container"></div>
+<span class="font-body-md text-body-md">GPT-4 Turbo</span>
+</div>
+<span class="font-code-md text-code-md font-medium">0.8s</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary-container"></div>
+<span class="font-body-md text-body-md">Claude 3 Opus</span>
+</div>
+<span class="font-code-md text-code-md font-medium">1.2s</span>
+</div>
+</div>
+</section>
+<!-- Cost Breakdown Card -->
+<section class="glass-panel p-5 rounded-xl border-dashed border-outline-variant/50">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-tertiary-container/20 rounded-lg text-tertiary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg font-semibold">Projected Spend</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Monthly estimated</p>
+</div>
+</div>
+<span class="font-headline-md text-headline-md">$248.00</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full w-[65%]"></div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface/80 dark:bg-surface-container-highest/80 backdrop-blur-lg border-t border-white/10 shadow-[0_-4px_12px_rgba(0,229,204,0.05)] flex justify-around items-center h-16 px-4">
+<a class="flex items-center justify-center text-on-secondary-container opacity-60 hover:opacity-100 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">home</span>
+</a>
+<a class="flex items-center justify-center text-on-secondary-container opacity-60 hover:opacity-100 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+</a>
+<!-- ACTIVE TAB -->
+<a class="flex items-center justify-center text-primary dark:text-primary-fixed-dim scale-110 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">query_stats</span>
+</a>
+<a class="flex items-center justify-center text-on-secondary-container opacity-60 hover:opacity-100 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">person</span>
+</a>
+</nav>
+<!-- Drawer Hidden Overlay (Visual Only) -->
+<div class="fixed inset-0 bg-black/5 z-[55] pointer-events-none opacity-0 backdrop-blur-sm"></div>
+</body></html>

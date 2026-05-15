@@ -1,95 +1,95 @@
-"""Authentication routes: login, logout, profile, password change."""
+"""Auth Endpoints mapping connection structures transparently avoiding bottlenecks natively."""
 
-from __future__ import annotations
+from datetime import datetime, timedelta, timezone
 
-import uuid
-
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_auth_service, get_current_user
-from app.core.auth import AuthService, hash_password, InvalidCredentialsError, verify_password
+from app.api.middleware.error_handler import AuthenticationError
 from app.db.postgres import get_db_session as get_db
-from app.limiter import limiter
+from app.models.session import UserSession
 from app.models.user import User
-from app.schemas.auth import ChangePasswordRequest, CurrentUser, LoginRequest, LoginResponse, UserPublic
+from app.schemas.auth import LoginRequest, TokenResponse
+from app.services.auth_service import AuthService
 
 router = APIRouter()
 
 
-def _display_name(user: User) -> str:
-    return f"{user.first_name} {user.last_name}".strip()
+def get_auth_service() -> AuthService:
+    return AuthService()
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
 
-def _user_public(user: User) -> UserPublic:
+@router.post("/login", response_model=TokenResponse)
+async def login(req: LoginRequest, db: AsyncSession = Depends(get_db), auth_svc: AuthService = Depends(get_auth_service)):
+    res = await db.execute(select(User).where(User.email == req.email))
+    user = res.scalar_one_or_none()
+    
+    if not user or not auth_svc.verify_password(req.password, user.password_hash):
+        raise AuthenticationError("Invalid email or password.")
+        
+    if not user.is_active:
+        raise AuthenticationError("Account is inactive.")
+        
     role_name = user.role.name if user.role else "USER"
-    tags = list(user.role.permissions) if user.role and user.role.permissions else []
-    return UserPublic(
-        id=str(user.id),
-        email=user.email,
-        display_name=_display_name(user),
-        role=role_name,
-        permission_tags=tags,
+    permissions = user.role.permissions if user.role else []
+    
+    access_token = auth_svc.create_access_token(str(user.id), role_name, permissions)
+    refresh_token = auth_svc.create_refresh_token(str(user.id))
+    
+    from app.config import settings
+    
+    session = UserSession(
+        user_id=str(user.id),
+        refresh_token=refresh_token,
+        expires_at=datetime.now(timezone.utc) + timedelta(days=7)
     )
-
-
-@router.post("/login", response_model=LoginResponse)
-@limiter.limit("5/5minutes")
-async def login(
-    request: Request,
-    req: LoginRequest,
-    db: AsyncSession = Depends(get_db),
-    auth: AuthService = Depends(get_auth_service),
-) -> LoginResponse:
-    """Issue JWT + session row + Redis session key."""
-    try:
-        user = await auth.authenticate(req.email, req.password)
-    except InvalidCredentialsError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
-
-    token, _sid = await auth.create_session(user)
-    await db.refresh(user)
-
-    return LoginResponse(
-        access_token=token,
-        token_type="bearer",
-        expires_in=28800,
-        user=_user_public(user),
-    )
-
-
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, response_class=Response, response_model=None)
-async def logout(
-    user: CurrentUser = Depends(get_current_user),
-    auth: AuthService = Depends(get_auth_service),
-) -> None:
-    await auth.revoke_session(user.session_id)
-
-
-@router.get("/me", response_model=UserPublic)
-async def me(
-    user: CurrentUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> UserPublic:
-    row = await db.get(User, uuid.UUID(user.id))
-    if not row:
-        raise HTTPException(status_code=404, detail="User not found")
-    await db.refresh(row, attribute_names=["role"])
-    return _user_public(row)
-
-
-@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT, response_class=Response, response_model=None)
-async def change_password(
-    body: ChangePasswordRequest,
-    user: CurrentUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-    auth: AuthService = Depends(get_auth_service),
-) -> None:
-    row = await db.get(User, uuid.UUID(user.id))
-    if not row:
-        raise HTTPException(status_code=404, detail="User not found")
-    if not verify_password(body.old_password, row.password_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid password")
-    row.password_hash = hash_password(body.new_password)
+    db.add(session)
     await db.commit()
-    await auth.revoke_all_sessions_for_user(user.id)
+    
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=settings.SESSION_EXPIRE_HOURS * 3600,
+        refresh_token=refresh_token
+    )
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh(req: RefreshRequest, db: AsyncSession = Depends(get_db), auth_svc: AuthService = Depends(get_auth_service)):
+    try:
+        from app.config import settings
+        import jwt
+        payload = jwt.decode(req.refresh_token, settings.SECRET_KEY, algorithms=["HS256"])
+        if payload.get("type") != "refresh":
+            raise AuthenticationError("Invalid token type.")
+    except Exception:
+        raise AuthenticationError("Invalid or expired refresh token.")
+        
+    res = await db.execute(select(UserSession).where(UserSession.refresh_token == req.refresh_token))
+    session = res.scalar_one_or_none()
+    
+    if not session or getattr(session.expires_at, "replace", lambda tzinfo: session.expires_at)(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        raise AuthenticationError("Invalid or expired refresh token.")
+        
+    user_res = await db.execute(select(User).where(User.id == session.user_id))
+    user = user_res.scalar_one()
+    
+    role_name = user.role.name if user.role else "USER"
+    permissions = user.role.permissions if user.role else []
+    
+    access_token = auth_svc.create_access_token(str(user.id), role_name, permissions)
+    
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=settings.SESSION_EXPIRE_HOURS * 3600,
+        refresh_token=req.refresh_token
+    )
+
+@router.post("/logout", status_code=204)
+async def logout(req: RefreshRequest, db: AsyncSession = Depends(get_db)):
+    await db.execute(delete(UserSession).where(UserSession.refresh_token == req.refresh_token))
+    await db.commit()
