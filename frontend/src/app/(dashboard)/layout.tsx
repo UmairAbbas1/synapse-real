@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname } from "next/navigation"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/lib/hooks/useAuth"
 import { useUIStore } from "@/stores/uiStore"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { Topbar } from "@/components/layout/Topbar"

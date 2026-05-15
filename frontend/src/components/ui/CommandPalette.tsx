@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { MessageSquare, Clock, Settings, Network, Search, Moon, Sun, Trash2, LogOut } from "lucide-react"
 import { useUIStore } from "@/stores/uiStore"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/lib/hooks/useAuth"
 import { useChatStore } from "@/store/chat-store"
 
 export function CommandPalette() {
@@ -68,7 +68,7 @@ export function CommandPalette() {
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="relative w-full max-w-xl overflow-hidden rounded-[12px] bg-surface-1 shadow-2xl ring-1 ring-border-strong mx-4"
           >
-            <Command 
+            <Command
               className="flex h-full w-full flex-col bg-transparent"
               onKeyDown={(e) => {
                 if (e.key === "Escape") setIsOpen(false)
@@ -107,14 +107,14 @@ export function CommandPalette() {
                 {recentQueries.length > 0 && (
                   <Command.Group heading="Recent Queries">
                     {recentQueries.map((q) => (
-                      <Command.Item 
-                        key={q.id} 
+                      <Command.Item
+                        key={q.id}
                         onSelect={() => runCommand(() => {
                           // Could pre-fill chat input or navigate to specific history item
                           router.push("/chat")
                         })}
                       >
-                        <Search className="mr-2 h-4 w-4 text-text-tertiary" /> 
+                        <Search className="mr-2 h-4 w-4 text-text-tertiary" />
                         <span className="truncate">{q.content}</span>
                       </Command.Item>
                     ))}

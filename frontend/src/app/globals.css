@@ -23,58 +23,127 @@
   --font-general-sans: "General Sans", sans-serif;
   --font-jetbrains-mono: "JetBrains Mono", monospace;
 
-  /* Backgrounds */
-  --bg-primary: #0A0A0F;
-  --bg-secondary: #12121A;
-  --bg-elevated: #1A1A26;
-  --bg-hover: #22222E;
+  /* Apple-inspired Light Palette */
+  --bg-primary: #F5F5F7;
+  --bg-secondary: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-hover: #F2F2F7;
   
-  /* Surfaces */
-  --surface-1: #1E1E2A;
-  --surface-2: #262636;
-  --surface-3: #2E2E40;
+  /* Surfaces with Tonal Layering */
+  --surface-1: #FFFFFF;
+  --surface-2: #FBFBFD;
+  --surface-3: #F2F2F7;
   
-  /* Text */
-  --text-primary: #EEEEF0;
-  --text-secondary: #9898A6;
-  --text-tertiary: #68687A;
+  /* Text: High Contrast & Legibility */
+  --text-primary: #1D1D1F;
+  --text-secondary: #86868B;
+  --text-tertiary: #A1A1A6;
   
-  /* Accent */
-  --accent-primary: #00E5CC;
-  --accent-hover: #00FFE0;
-  --accent-muted: rgba(0, 229, 204, 0.15);
-  --accent-glow: rgba(0, 229, 204, 0.4);
+  /* Accent: Synapse Cyan (#00E5CC) */
+  --accent-primary: #00BFA5; /* Slightly darkened for light mode legibility */
+  --accent-hover: #00E5CC;
+  --accent-muted: rgba(0, 191, 165, 0.08);
+  --accent-glow: rgba(0, 229, 204, 0.25);
   
   /* Semantic */
   --success: #34D399;
-  --warning: #FBBF24;
-  --error: #F87171;
-  --info: #60A5FA;
+  --warning: #F59E0B;
+  --error: #FF3B30; /* Apple Red */
+  --info: #007AFF; /* Apple Blue */
   
-  /* Borders */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-medium: rgba(255, 255, 255, 0.10);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  /* Borders: Ultra Subtle */
+  --border-subtle: rgba(0, 0, 0, 0.04);
+  --border-medium: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.12);
   
-  /* Glassmorphism */
-  --glass-bg: rgba(18, 18, 26, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: 20px;
+  /* Glassmorphism: Premium Frosted Glass */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-blur: 24px;
+
+  /* Depth Effects */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.02);
+  --shadow-lg: 0 20px 40px rgba(0,0,0,0.04), 0 1px 4px rgba(0,0,0,0.02);
 }
 
-[data-theme="light"] {
-  --bg-primary: #FAFAF9;
-  --bg-secondary: #F5F5F0;
-  --bg-elevated: #FFFFFF;
-  --text-primary: #1A1A1A;
-  --text-secondary: #6B6B6B;
-  --accent-primary: #009B8D;
+/* Dark mode override (optional, but keeping it for flexibility) */
+[data-theme="dark"] {
+  --bg-primary: #0A0A0F;
+  --bg-secondary: #12121A;
+  --bg-elevated: #1A1A26;
+  --text-primary: #EEEEF0;
+  --text-secondary: #9898A6;
+  --accent-primary: #00E5CC;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(18, 18, 26, 0.8);
 }
 
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'General Sans', sans-serif;
+  font-family: var(--font-general-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   margin: 0;
+  overflow-x: hidden;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+  background-clip: content-box;
+}
+
+/* Premium Typography Refinements */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Glassmorphism Utility */
+.glass-effect {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+}
+
+/* Apple-style Buttons */
+.btn-premium {
+  @apply relative px-5 py-2.5 rounded-[10px] font-medium transition-all duration-300 ease-out active:scale-95;
+}
+
+.btn-premium-primary {
+  @apply btn-premium bg-accent-primary text-white shadow-sm hover:bg-accent-hover hover:shadow-[0_0_20px_var(--accent-glow)];
+}
+
+.btn-premium-secondary {
+  @apply btn-premium bg-white text-text-primary border border-border-medium hover:bg-bg-hover;
+}
+
+/* 3D Card Hover Effect */
+.card-3d {
+  @apply transition-transform duration-500 ease-out hover:-translate-y-1 hover:shadow-lg;
 }

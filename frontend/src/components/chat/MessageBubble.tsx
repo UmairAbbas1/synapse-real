@@ -48,133 +48,149 @@ export function MessageBubble({ message }: { message: Message }) {
   const sourceCount = citations.length
 
   return (
-    <div className={cn("group flex w-full py-6", isUser ? "justify-end" : "justify-start")}>
-      <div className={cn("flex max-w-[85%] gap-4", isUser ? "flex-row-reverse" : "flex-row")}>
+    <div className={cn("group flex w-full py-8", isUser ? "justify-end" : "justify-start")}>
+      <div className={cn("flex max-w-[90%] gap-6 animate-fade-in", isUser ? "flex-row-reverse" : "flex-row")}>
         <div className="mt-1 shrink-0">
           {isUser ? (
-            <Avatar initials={user?.display_name?.charAt(0) || "U"} className="h-8 w-8" />
+            <div className="relative">
+               <Avatar initials={user?.display_name?.charAt(0) || "U"} className="h-10 w-10 ring-2 ring-accent-primary/20 shadow-lg" />
+               <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-status-success border-2 border-white shadow-sm" />
+            </div>
           ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-primary font-mono text-xs font-black text-bg-primary">
-              S
+            <div className="relative group">
+              <div className="absolute inset-0 bg-accent-primary/40 blur-md rounded-full group-hover:blur-lg transition-all" />
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-accent-primary font-sans text-sm font-black text-white shadow-xl">
+                S
+              </div>
             </div>
           )}
         </div>
 
-        <div className={cn("flex min-w-0 flex-col gap-2", isUser ? "items-end" : "w-full")}>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-text-secondary">
-              {isUser ? user?.display_name || "You" : "Synapse"}
+        <div className={cn("flex min-w-0 flex-col gap-3", isUser ? "items-end" : "w-full")}>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-bold text-text-tertiary uppercase tracking-[0.15em]">
+              {isUser ? user?.display_name || "Authorized User" : "Synapse Intelligence"}
             </span>
-            {message.content ? (
+            {message.content && !isUser ? (
               <button
                 type="button"
                 onClick={() => void copyContent()}
-                className="rounded p-1 text-text-tertiary opacity-0 transition-opacity hover:bg-surface-2 hover:text-text-primary group-hover:opacity-100 focus:opacity-100 focus:outline-none"
-                title="Copy"
+                className="rounded-full p-1.5 text-text-tertiary opacity-0 transition-all hover:bg-bg-hover hover:text-text-primary group-hover:opacity-100 focus:opacity-100"
               >
-                {copied ? <Check className="h-3.5 w-3.5 text-status-success" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? <Check className="h-3 w-3 text-status-success" /> : <Copy className="h-3 w-3" />}
               </button>
             ) : null}
           </div>
 
           {isUser ? (
-            <div className="rounded-[12px] rounded-tr-[4px] bg-accent-muted px-5 py-3 text-sm text-text-primary">
+            <div className="rounded-[20px] rounded-tr-[4px] bg-accent-primary px-6 py-4 text-sm font-medium text-white shadow-lg shadow-accent-primary/10 leading-relaxed max-w-2xl">
               <p className="whitespace-pre-wrap">{message.content}</p>
             </div>
           ) : (
             <div className="w-full text-sm text-text-primary">
               {message.status === "thinking" ? (
-                <div className="rounded-[12px] border border-border-medium bg-surface-1 px-4 py-3">
-                  <span className="text-text-secondary">Thinking</span>
-                  <span className="ml-1 inline-flex gap-0.5 align-middle">
-                    {[0, 1, 2].map((i) => (
-                      <motion.span
+                <div className="rounded-[20px] border border-border-medium bg-bg-primary/50 backdrop-blur-md px-6 py-4 flex items-center gap-3">
+                  <div className="flex gap-1">
+                     {[0, 1, 2].map((i) => (
+                      <motion.div
                         key={i}
-                        className="inline-block h-1.5 w-1.5 rounded-full bg-accent-primary"
-                        animate={{ opacity: [0.3, 1, 0.3] }}
-                        transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }}
+                        className="h-1.5 w-1.5 rounded-full bg-accent-primary"
+                        animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+                        transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
                       />
                     ))}
-                  </span>
+                  </div>
+                  <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">Processing Context...</span>
                 </div>
               ) : null}
 
               {message.status === "streaming" || message.status === "done" || message.status === "error" ? (
                 <div
                   className={cn(
-                    "rounded-[12px] border border-border-medium bg-surface-1 px-4 py-3",
-                    message.status === "error" && "border-status-error/40 bg-status-error/5"
+                    "rounded-[20px] border border-border-medium bg-white px-8 py-6 shadow-sm transition-all duration-500",
+                    message.status === "error" && "border-status-error/40 bg-status-error/5 shadow-none"
                   )}
                 >
                   {message.status === "error" ? (
-                    <p className="text-status-error">{message.content}</p>
+                    <div className="flex items-center gap-3 text-status-error">
+                      <div className="h-2 w-2 rounded-full bg-status-error animate-pulse" />
+                      <p className="font-semibold uppercase text-[10px] tracking-widest">{message.content}</p>
+                    </div>
                   ) : (
-                    <div>
+                    <div className="prose prose-sm prose-slate max-w-none">
                       <MarkdownRenderer content={message.content} />
                       {message.status === "streaming" ? (
-                        <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-accent-primary align-middle" />
+                        <span className="ml-1 inline-block h-4 w-1 animate-pulse bg-accent-primary rounded-full align-middle" />
                       ) : null}
                     </div>
                   )}
                 </div>
               ) : null}
 
-              {conf && latencySec !== null ? (
-                <Tooltip
-                  content={`Answered in ${latencySec}s using ${String(sourceCount)} sources`}
-                  side="bottom"
-                >
-                  <span
-                    className={cn(
-                      "mt-2 inline-flex cursor-default rounded-full border px-2.5 py-0.5 text-xs font-semibold",
-                      conf.className
-                    )}
-                  >
+              <div className="flex flex-wrap items-center gap-3 mt-4">
+                {conf && (
+                  <div className={cn(
+                    "inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest shadow-sm",
+                    conf.className
+                  )}>
+                    <div className={cn("h-1.5 w-1.5 rounded-full", conf.className.split(' ')[1])} />
                     {conf.text}
-                  </span>
-                </Tooltip>
-              ) : null}
+                  </div>
+                )}
+                
+                {latencySec !== null && (
+                  <div className="inline-flex items-center gap-2 rounded-full border border-border-medium bg-bg-primary px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-text-tertiary">
+                    Latency: {latencySec}s
+                  </div>
+                )}
 
-              {message.expert ? (
-                <div className="mt-4">
-                  <ExpertCard expert={message.expert} />
-                </div>
-              ) : null}
-
-              {citations.length > 0 ? (
-                <div className="mt-4">
+                {sourceCount > 0 && (
                   <button
                     type="button"
                     onClick={() => setShowCitations(!showCitations)}
-                    className="flex items-center gap-2 text-xs font-semibold text-text-secondary transition-colors hover:text-accent-primary focus:outline-none"
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all",
+                      showCitations 
+                        ? "bg-accent-primary text-white border-accent-primary shadow-lg shadow-accent-primary/20" 
+                        : "bg-white text-text-secondary border-border-medium hover:border-accent-primary hover:text-accent-primary"
+                    )}
                   >
+                    {sourceCount} Documents Grounded
                     {showCitations ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                    Sources ({citations.length})
                   </button>
+                )}
+              </div>
 
-                  {showCitations ? (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3"
-                    >
-                      {displayedCitations.map((citation, idx) => (
-                        <CitationCard key={`${citation.source_url}-${String(idx)}`} citation={citation} />
-                      ))}
-                    </motion.div>
-                  ) : null}
+              {message.expert && (
+                <div className="mt-6 border-l-2 border-accent-primary/20 pl-6">
+                  <div className="mb-3 text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Expert Node Analysis</div>
+                  <ExpertCard expert={message.expert} />
+                </div>
+              )}
 
-                  {showCitations && moreCount > 0 ? (
+              {showCitations && citations.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 space-y-4"
+                >
+                  <div className="h-px w-full bg-gradient-to-r from-border-medium via-transparent to-transparent" />
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
+                    {displayedCitations.map((citation, idx) => (
+                      <CitationCard key={`${citation.source_url}-${String(idx)}`} citation={citation} />
+                    ))}
+                  </div>
+                  {moreCount > 0 && (
                     <button
                       type="button"
                       onClick={() => setExpandedCitations(!expandedCitations)}
-                      className="mt-3 text-xs font-bold text-accent-primary hover:underline focus:outline-none"
+                      className="text-[11px] font-bold text-accent-primary uppercase tracking-widest hover:underline px-2"
                     >
-                      {expandedCitations ? "Show fewer" : `Show ${String(moreCount)} more`}
+                      {expandedCitations ? "Collate Results" : `Verify ${moreCount} More Sources`}
                     </button>
-                  ) : null}
-                </div>
-              ) : null}
+                  )}
+                </motion.div>
+              )}
             </div>
           )}
         </div>

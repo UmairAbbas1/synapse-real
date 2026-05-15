@@ -15,7 +15,7 @@ export function QueryInput({ onSubmit, isLoading, disabled }: QueryInputProps) {
 
   const lineCount = React.useMemo(() => {
     const lines = value.split("\n").length
-    return Math.min(4, Math.max(1, lines))
+    return Math.min(8, Math.max(1, lines))
   }, [value])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -34,42 +34,49 @@ export function QueryInput({ onSubmit, isLoading, disabled }: QueryInputProps) {
   const len = value.length
 
   return (
-    <div className="w-full border-t border-border-subtle bg-bg-primary px-4 py-4 sm:px-6">
-      <div className="mx-auto flex max-w-4xl items-end gap-2">
-        <div className="flex min-w-0 flex-1 flex-col gap-1 border-b border-border-strong pb-2 transition-colors focus-within:border-accent-primary">
+    <div className="w-full bg-transparent px-6 py-3">
+      <div className="flex items-end gap-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <textarea
             value={value}
             onChange={(e) => {
               const v = e.target.value
-              if (v.length <= 2000) setValue(v)
+              if (v.length <= 4000) setValue(v)
             }}
             onKeyDown={handleKeyDown}
             disabled={disabled || isLoading}
-            placeholder="Ask anything… (Enter to send, Shift+Enter for newline)"
+            placeholder="Search knowledge or ask Synapse..."
             rows={lineCount}
-            className="max-h-32 min-h-10 w-full resize-none bg-transparent py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="max-h-64 min-h-[44px] w-full resize-none bg-transparent py-3 text-[15px] font-medium text-text-primary placeholder:text-text-tertiary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-all"
           />
-          <div className="flex justify-end">
-            <span
-              className={cn(
-                "text-xs",
-                len > 2000 ? "text-status-error" : "text-text-tertiary"
-              )}
-            >
-              {len} / 2000
-            </span>
-          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={submit}
-          disabled={!value.trim() || isLoading || disabled}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] bg-accent-primary text-bg-primary transition-all hover:bg-accent-hover hover:shadow-[0_0_15px_var(--accent-glow)] focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-          title="Send"
-        >
-          <Send className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-3 pb-1.5">
+          <div className={cn(
+            "text-[10px] font-mono tracking-tighter transition-all duration-300",
+            len > 3500 ? "text-error opacity-100" : "text-text-tertiary opacity-0 group-focus-within:opacity-100"
+          )}>
+            {len}/4k
+          </div>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={!value.trim() || isLoading || disabled}
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] transition-all duration-500 active:scale-90",
+              !value.trim() || isLoading || disabled
+                ? "bg-bg-hover text-text-tertiary"
+                : "bg-accent-primary text-white shadow-lg shadow-accent-primary/30 hover:shadow-accent-primary/50 hover:scale-105"
+            )}
+            title="Send Inquiry"
+          >
+            {isLoading ? (
+              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Send className="h-4.5 w-4.5" />
+            )}
+          </button>
+        </div>
       </div>
     </div>
   )

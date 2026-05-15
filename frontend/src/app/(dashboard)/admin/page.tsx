@@ -94,39 +94,62 @@ export default function AdminDashboard() {
         return fallbackData
       }
     },
-    refetchInterval: 30000, // 30 seconds
-    initialData: fallbackData, // Using fallback for immediate UI rendering during dev
+    refetchInterval: 30000,
+    initialData: fallbackData,
   })
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-primary">Overview</h1>
+    <div className="max-w-[1600px] mx-auto space-y-10 animate-slide-up">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold text-text-primary tracking-tight">System Intelligence</h1>
+        <p className="text-sm text-text-secondary">Real-time monitoring and analytics for Synapse AI</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Documents" value={data.total_documents.toLocaleString()} icon={FileText} trend="+5.2%" />
-        <StatCard title="Active Data Sources" value={data.active_sources.toString()} icon={Database} />
-        <StatCard title="Active Users" value={data.active_users.toString()} icon={Users} />
-        <StatCard title="Avg Response Time" value={`${data.avg_response_time_ms}ms`} icon={Clock} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Total Knowledge Base" value={data.total_documents.toLocaleString()} icon={FileText} trend="+5.2%" description="Total indexed chunks" />
+        <StatCard title="Connected Sources" value={data.active_sources.toString()} icon={Database} description="Live data ingestion points" />
+        <StatCard title="Concurrent Users" value={data.active_users.toString()} icon={Users} trend="Active" description="Live sessions across nodes" />
+        <StatCard title="Mean Response Time" value={`${data.avg_response_time_ms}ms`} icon={Clock} trend="-12ms" description="Latency across all experts" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="p-6 lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-text-primary">Queries Today</h3>
-            <span className="text-sm font-medium bg-surface-2 px-3 py-1 rounded-full">{data.queries_today.toLocaleString()} Total</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="p-8 lg:col-span-2 overflow-hidden border-none shadow-lg bg-white/40">
+          <div className="flex items-center justify-between mb-8">
+            <div className="space-y-1">
+              <h3 className="text-xl font-bold text-text-primary">Query Throughput</h3>
+              <p className="text-xs text-text-tertiary uppercase tracking-widest font-mono">24 Hour Activity Loop</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-end">
+                <span className="text-lg font-bold text-accent-primary">{data.queries_today.toLocaleString()}</span>
+                <span className="text-[10px] text-text-tertiary uppercase font-mono">Total Queries</span>
+              </div>
+              <div className="h-10 w-px bg-border-medium" />
+              <div className="h-2 w-2 rounded-full bg-accent-primary animate-pulse" />
+            </div>
           </div>
-          <div className="h-64 w-full">
+          <div className="h-72 w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.hourly_queries}>
-                <XAxis dataKey="hour" stroke="var(--text-tertiary)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-tertiary)" fontSize={12} tickLine={false} axisLine={false} />
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--accent-primary)" stopOpacity={1} />
+                    <stop offset="100%" stopColor="var(--accent-primary)" stopOpacity={0.6} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="hour" stroke="var(--text-tertiary)" fontSize={10} tickLine={false} axisLine={false} tick={{dy: 10}} />
+                <YAxis hide />
                 <RechartsTooltip 
-                  cursor={{ fill: 'var(--surface-2)' }} 
-                  contentStyle={{ backgroundColor: 'var(--surface-1)', borderColor: 'var(--border-strong)', borderRadius: '8px' }}
+                  cursor={{ fill: 'rgba(0,0,0,0.02)' }} 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255,255,255,0.9)', 
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid var(--border-medium)', 
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.05)'
+                  }}
                 />
-                <Bar dataKey="count" fill="var(--accent-primary)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="url(#barGradient)" radius={[6, 6, 0, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -137,17 +160,38 @@ export default function AdminDashboard() {
         </div>
       </div>
       
-      <Card className="p-6">
-        <h3 className="text-lg font-bold text-text-primary mb-6">Document Growth Trend</h3>
-        <div className="h-64 w-full">
+      <Card className="p-8 border-none shadow-lg bg-white/40">
+        <div className="flex flex-col gap-1 mb-8">
+          <h3 className="text-xl font-bold text-text-primary">Knowledge Growth</h3>
+          <p className="text-xs text-text-tertiary uppercase tracking-widest font-mono">Temporal Document Density</p>
+        </div>
+        <div className="h-72 w-full mt-4">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data.document_trend}>
-              <XAxis dataKey="date" stroke="var(--text-tertiary)" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="var(--text-tertiary)" fontSize={12} tickLine={false} axisLine={false} />
+              <defs>
+                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--accent-primary)" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="var(--accent-primary)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="date" stroke="var(--text-tertiary)" fontSize={10} tickLine={false} axisLine={false} tick={{dy: 10}} />
+              <YAxis hide />
               <RechartsTooltip 
-                contentStyle={{ backgroundColor: 'var(--surface-1)', borderColor: 'var(--border-strong)', borderRadius: '8px' }}
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255,255,255,0.9)', 
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid var(--border-medium)', 
+                  borderRadius: '12px' 
+                }}
               />
-              <Area type="monotone" dataKey="count" stroke="var(--accent-primary)" fill="var(--accent-primary)" fillOpacity={0.2} />
+              <Area 
+                type="monotone" 
+                dataKey="count" 
+                stroke="var(--accent-primary)" 
+                strokeWidth={3}
+                fill="url(#areaGradient)" 
+                animationDuration={1500}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -156,18 +200,33 @@ export default function AdminDashboard() {
   )
 }
 
-function StatCard({ title, value, icon: Icon, trend }: { title: string, value: string, icon: React.ElementType, trend?: string }) {
+function StatCard({ title, value, icon: Icon, trend, description }: { title: string, value: string, icon: React.ElementType, trend?: string, description?: string }) {
   return (
-    <Card className="p-5 flex flex-col justify-between h-32">
+    <Card className="p-6 flex flex-col justify-between h-44 group border-none shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-1 bg-white/50">
       <div className="flex items-start justify-between">
-        <span className="text-sm font-medium text-text-secondary">{title}</span>
-        <div className="p-2 bg-surface-2 rounded-md">
-          <Icon className="h-4 w-4 text-accent-primary" />
+        <div className="space-y-1">
+          <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">{title}</span>
+          <div className="flex items-baseline gap-2">
+            <h4 className="text-3xl font-bold text-text-primary tracking-tighter">{value}</h4>
+            {trend && (
+              <span className={cn(
+                "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                trend.startsWith('+') ? "text-success bg-success/10" : "text-accent-primary bg-accent-muted"
+              )}>
+                {trend}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="p-3 bg-white rounded-[12px] shadow-sm group-hover:bg-accent-primary group-hover:text-white transition-all duration-500 border border-border-subtle">
+          <Icon className="h-5 w-5" />
         </div>
       </div>
-      <div className="flex items-end justify-between">
-        <h4 className="text-2xl font-bold text-text-primary">{value}</h4>
-        {trend && <span className="text-xs font-semibold text-status-success">{trend}</span>}
+      <div className="mt-auto">
+        <p className="text-[11px] text-text-tertiary leading-relaxed font-medium">{description}</p>
+        <div className="mt-3 h-1 w-full bg-border-subtle rounded-full overflow-hidden">
+          <div className="h-full bg-accent-primary w-2/3 group-hover:w-full transition-all duration-1000 ease-out" />
+        </div>
       </div>
     </Card>
   )

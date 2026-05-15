@@ -43,23 +43,27 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-40 flex flex-col border-r border-border-subtle bg-bg-secondary transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-        sidebarCollapsed ? "w-[64px]" : "w-[240px]"
+        "fixed inset-y-0 left-0 z-40 flex flex-col transition-[width] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+        "glass-effect shadow-lg border-r border-border-medium",
+        sidebarCollapsed ? "w-[64px]" : "w-[260px]"
       )}
     >
-      <div className="flex h-16 shrink-0 items-center justify-between px-4">
+      <div className="flex h-20 shrink-0 items-center justify-between px-6">
         {!sidebarCollapsed && (
-          <span className="text-xl font-black tracking-tight text-accent-primary">SYNAPSE</span>
+          <div className="flex items-center gap-2">
+            <div className="h-2.5 w-2.5 rounded-full bg-accent-primary animate-pulse" />
+            <span className="text-xl font-bold tracking-tight text-text-primary uppercase">SYNAPSE</span>
+          </div>
         )}
         <button
           onClick={toggleSidebar}
-          className="rounded-md p-1.5 text-text-secondary hover:bg-surface-2 hover:text-text-primary focus:outline-none"
+          className="rounded-[8px] p-2 text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-all duration-300"
         >
           {sidebarCollapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
         </button>
       </div>
 
-      <nav className="flex-1 space-y-2 p-2 overflow-y-auto">
+      <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
         {visibleNavItems.map((item) => {
           const isActive = pathname.startsWith(item.href)
           const content = (
@@ -67,13 +71,16 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "group flex items-center rounded-[8px] px-2 py-2.5 text-sm font-medium transition-colors",
+                "group relative flex items-center rounded-[10px] px-3 py-3 text-sm font-medium transition-all duration-300 overflow-hidden",
                 isActive
-                  ? "bg-bg-hover text-accent-primary border-l-[3px] border-accent-primary"
-                  : "text-text-secondary hover:bg-surface-1 hover:text-text-primary border-l-[3px] border-transparent"
+                  ? "bg-accent-muted text-accent-primary"
+                  : "text-text-secondary hover:bg-bg-hover hover:text-text-primary"
               )}
             >
-              <item.icon className={cn("h-5 w-5 shrink-0", !sidebarCollapsed && "mr-3", isActive ? "text-accent-primary" : "text-text-tertiary group-hover:text-text-primary")} />
+              {isActive && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent-primary rounded-r-full" />
+              )}
+              <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110", !sidebarCollapsed && "mr-3", isActive ? "text-accent-primary" : "text-text-tertiary group-hover:text-text-primary")} />
               {!sidebarCollapsed && <span>{item.label}</span>}
             </Link>
           )
@@ -86,21 +93,21 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-border-subtle p-4 flex flex-col gap-4">
+      <div className="border-t border-border-subtle p-6 flex flex-col gap-4">
         <button
           onClick={toggleTheme}
-          className="flex items-center rounded-[8px] p-2 text-sm font-medium text-text-secondary hover:bg-surface-1 hover:text-text-primary transition-colors"
+          className="flex items-center rounded-[10px] p-2.5 text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-all duration-300"
         >
           {theme === "dark" ? <Sun className="h-5 w-5 shrink-0" /> : <Moon className="h-5 w-5 shrink-0" />}
-          {!sidebarCollapsed && <span className="ml-3">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+          {!sidebarCollapsed && <span className="ml-3">{theme === "dark" ? "Light Appearance" : "Dark Appearance"}</span>}
         </button>
 
-        <div className="flex items-center">
-          <Avatar initials={user?.display_name?.charAt(0) || "U"} />
+        <div className="flex items-center p-1">
+          <Avatar initials={user?.display_name?.charAt(0) || "U"} className="ring-2 ring-border-medium" />
           {!sidebarCollapsed && (
             <div className="ml-3 overflow-hidden">
-              <p className="truncate text-sm font-medium text-text-primary">{user?.display_name || "User"}</p>
-              <p className="truncate text-xs text-text-tertiary">{user?.role || "USER"}</p>
+              <p className="truncate text-sm font-semibold text-text-primary leading-tight">{user?.display_name || "User"}</p>
+              <p className="truncate text-[10px] font-mono text-text-tertiary uppercase tracking-wider mt-0.5">{user?.role || "USER"}</p>
             </div>
           )}
         </div>

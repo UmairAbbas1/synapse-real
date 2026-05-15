@@ -61,14 +61,25 @@ const config: Config = {
           "50%": { opacity: "0.5" },
         },
         "slide-up": {
-          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "0%": { opacity: "0", transform: "translateY(12px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-4px)" },
+          "20%, 40%, 60%, 80%": { transform: "translateX(4px)" },
         },
       },
       animation: {
         shimmer: "shimmer 2s linear infinite",
         "glow-pulse": "glow-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "slide-up": "slide-up 0.2s ease-out",
+        "slide-up": "slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+        "fade-in": "fade-in 0.5s ease-out",
+        "shake": "shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both",
       },
     },
   },
