@@ -4,40 +4,23 @@ import * as React from "react"
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, Html } from "@react-three/drei"
 import * as THREE from "three"
-import { useQuery } from "@tanstack/react-query"
-import { get } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-interface GraphNode {
+export interface GraphNode {
   id: string
   label: "Person" | "Document" | "Project" | "Team"
   name: string
   degree: number
 }
 
-interface GraphEdge {
+export interface GraphEdge {
   source: string
   target: string
 }
 
-interface GraphData {
+export interface GraphData {
   nodes: GraphNode[]
   edges: GraphEdge[]
-}
-
-const mockGraphData: GraphData = {
-  nodes: [
-    { id: "1", label: "Person", name: "Alice", degree: 5 },
-    { id: "2", label: "Document", name: "Q1 Architecture", degree: 3 },
-    { id: "3", label: "Project", name: "Project Synapse", degree: 8 },
-    { id: "4", label: "Team", name: "Engineering", degree: 4 },
-  ],
-  edges: [
-    { source: "1", target: "4" },
-    { source: "1", target: "2" },
-    { source: "3", target: "4" },
-    { source: "2", target: "3" },
-  ]
 }
 
 const COLORS = {
@@ -54,7 +37,13 @@ const LEGEND_SWATCH: Record<keyof typeof COLORS, string> = {
   Team: "bg-status-success shadow-[0_0_8px_rgba(52,211,153,0.45)]",
 }
 
-function GraphScene({ data }: { data: GraphData }) {
+function GraphScene({
+  data,
+  highlightedIds,
+}: {
+  data: GraphData
+  highlightedIds: Set<string>
+}) {
   const [hoveredNode, setHoveredNode] = React.useState<GraphNode | null>(null)
   
   // Very simplified radial force simulation layout for MVP
@@ -86,6 +75,8 @@ function GraphScene({ data }: { data: GraphData }) {
     return geometry
   }, [data.edges, nodePositions])
 
+  const hasHighlights = highlightedIds.size > 0
+
   return (
     <group>
       <ambientLight intensity={0.5} />
@@ -99,7 +90,9 @@ function GraphScene({ data }: { data: GraphData }) {
       {/* Nodes */}
       {data.nodes.map(node => {
         const pos = nodePositions.get(node.id)!
-        const size = Math.max(0.5, Math.min(node.degree * 0.2, 3))
+        const isHighlighted = highlightedIds.has(node.id)
+        const size = Math.max(0.5, Math.min(node.degree * 0.2, 3)) * (isHighlighted ? 1.25 : 1)
+        const dimmed = hasHighlights && !isHighlighted
         
         return (
           <mesh 
@@ -112,7 +105,9 @@ function GraphScene({ data }: { data: GraphData }) {
             <meshStandardMaterial 
               color={COLORS[node.label]} 
               emissive={COLORS[node.label]}
-              emissiveIntensity={0.2}
+              emissiveIntensity={isHighlighted ? 0.45 : 0.2}
+              transparent={dimmed}
+              opacity={dimmed ? 0.35 : 1}
             />
             {hoveredNode?.id === node.id && (
               <Html distanceFactor={25} center>
@@ -129,13 +124,25 @@ function GraphScene({ data }: { data: GraphData }) {
   )
 }
 
-export function KnowledgeGraph3D() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['adminGraph'],
-    queryFn: () => get<GraphData>('/admin/graph').catch(() => mockGraphData),
-    initialData: mockGraphData,
-  })
+export function KnowledgeGraph3D({
+  data,
+  searchQuery,
+  isLoading,
+}: {
+  data: GraphData
+  searchQuery?: string
+  isLoading?: boolean
+}) {
   const [webglSupported, setWebglSupported] = React.useState<boolean | null>(null)
+  const needle = (searchQuery ?? "").trim().toLowerCase()
+  const highlightedIds = React.useMemo(() => {
+    if (!needle) return new Set<string>()
+    return new Set(
+      data.nodes
+        .filter((n) => n.name.toLowerCase().includes(needle))
+        .map((n) => n.id)
+    )
+  }, [data.nodes, needle])
 
   React.useEffect(() => {
     const canvas = document.createElement("canvas")
@@ -173,7 +180,7 @@ export function KnowledgeGraph3D() {
       ) : webglSupported === true ? (
         <Canvas camera={{ position: [0, 20, 35], fov: 60 }}>
           <color attach="background" args={["#0A0A0F"]} />
-          <GraphScene data={data} />
+          <GraphScene data={data} highlightedIds={highlightedIds} />
           <OrbitControls 
             enableDamping 
             dampingFactor={0.05} 

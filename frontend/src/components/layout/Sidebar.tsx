@@ -23,13 +23,13 @@ import { Avatar } from "@/components/ui/Avatar"
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { label: "Chat", href: "/chat", icon: MessageSquare, roles: ["USER", "ADMIN", "EXPERT", "PM", "HR", "JUNIOR_DEV", "SENIOR_DEV"] },
-  { label: "History", href: "/history", icon: Clock, roles: ["USER", "ADMIN", "EXPERT", "PM", "HR", "JUNIOR_DEV", "SENIOR_DEV"] },
-  { label: "Knowledge Graph", href: "/admin/graph", icon: Network, roles: ["USER", "ADMIN", "EXPERT", "PM", "HR", "JUNIOR_DEV", "SENIOR_DEV"] },
-  { label: "Admin Dashboard", href: "/admin", icon: Settings, roles: ["ADMIN"] },
-  { label: "Sources", href: "/admin/sources", icon: Database, roles: ["ADMIN"] },
-  { label: "Users", href: "/admin/users", icon: Users, roles: ["ADMIN"] },
-  { label: "Audit", href: "/admin/audit", icon: ScrollText, roles: ["ADMIN"] },
+  { label: "Chat", href: "/chat", icon: MessageSquare, roles: ["user", "admin", "expert", "pm", "hr", "junior_dev", "senior_dev"] },
+  { label: "History", href: "/history", icon: Clock, roles: ["user", "admin", "expert", "pm", "hr", "junior_dev", "senior_dev"] },
+  { label: "Knowledge Graph", href: "/admin/graph", icon: Network, roles: ["user", "admin", "expert", "pm", "hr", "junior_dev", "senior_dev"] },
+  { label: "Admin Dashboard", href: "/admin", icon: Settings, roles: ["admin"] },
+  { label: "Sources", href: "/admin/sources", icon: Database, roles: ["admin"] },
+  { label: "Users", href: "/admin/users", icon: Users, roles: ["admin"] },
+  { label: "Audit", href: "/admin/audit", icon: ScrollText, roles: ["admin"] },
 ]
 
 export function Sidebar() {
@@ -37,7 +37,7 @@ export function Sidebar() {
   const { user } = useAuthStore()
   const pathname = usePathname()
 
-  const userRole = user?.role || "USER"
+  const userRole = (user?.role || "user").toLowerCase()
   const visibleNavItems = navItems.filter(item => item.roles.includes(userRole))
 
   return (
@@ -107,7 +107,7 @@ export function Sidebar() {
           {!sidebarCollapsed && (
             <div className="ml-3 overflow-hidden">
               <p className="truncate text-sm font-semibold text-text-primary leading-tight">{user?.display_name || "User"}</p>
-              <p className="truncate text-[10px] font-mono text-text-tertiary uppercase tracking-wider mt-0.5">{user?.role || "USER"}</p>
+              <p className="truncate text-[10px] font-mono text-text-tertiary uppercase tracking-wider mt-0.5">{(user?.role || "user").toUpperCase()}</p>
             </div>
           )}
         </div>

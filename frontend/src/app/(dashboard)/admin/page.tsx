@@ -132,7 +132,7 @@ export default function AdminDashboard() {
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" stroke="#737686" fontSize={11} tickLine={false} axisLine={false} fontFamily="JetBrains Mono" />
-                <YAxis stroke="#737686" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => \`\${val/1000}k\`} fontFamily="JetBrains Mono" width={40} />
+                <YAxis stroke="#737686" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `${val / 1000}k`} fontFamily="JetBrains Mono" width={40} />
                 <RechartsTooltip 
                   contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #c3c6d7', fontSize: '13px', fontFamily: 'JetBrains Mono' }}
                 />

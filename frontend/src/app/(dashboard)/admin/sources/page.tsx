@@ -31,6 +31,7 @@ const PERMISSION_TAGS = ["engineering", "hr", "pm", "public", "finance", "admin"
 export default function AdminSourcesPage() {
   const router = useRouter()
   const { user, isHydrated } = useAuthStore()
+  const isAdmin = (user?.role || "").toLowerCase() === "admin"
   const [sources, setSources] = React.useState<Source[] | null>(null)
   const [loadError, setLoadError] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -57,13 +58,13 @@ export default function AdminSourcesPage() {
 
   React.useEffect(() => {
     if (!isHydrated) return
-    if (user?.role !== "ADMIN") {
+    if (!isAdmin) {
       toast.error("Admin access required")
       router.replace("/chat")
       return
     }
     void load()
-  }, [isHydrated, user?.role, router, load])
+  }, [isHydrated, isAdmin, router, load])
 
   const openJobs = async (s: Source) => {
     setJobsSource(s)
@@ -99,7 +100,7 @@ export default function AdminSourcesPage() {
     return () => window.clearInterval(id)
   }, [jobsOpen, jobsSource, jobs, refreshJobs])
 
-  if (!isHydrated || user?.role !== "ADMIN") {
+  if (!isHydrated || !isAdmin) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-primary border-t-transparent" />

@@ -75,6 +75,7 @@ function actionVariant(action: string): "default" | "success" | "warning" | "err
 export default function AdminAuditPage() {
   const router = useRouter()
   const { user, isHydrated } = useAuthStore()
+  const isAdmin = (user?.role || "").toLowerCase() === "admin"
   const [items, setItems] = React.useState<AuditLog[]>([])
   const [loading, setLoading] = React.useState(true)
   const [err, setErr] = React.useState<string | null>(null)
@@ -127,7 +128,7 @@ export default function AdminAuditPage() {
 
   React.useEffect(() => {
     if (!isHydrated) return
-    if (user?.role !== "ADMIN") {
+    if (!isAdmin) {
       toast.error("Admin access required")
       router.replace("/chat")
       return
@@ -140,12 +141,12 @@ export default function AdminAuditPage() {
         setUserDirectory([])
       }
     })()
-  }, [isHydrated, user?.role, router])
+  }, [isHydrated, isAdmin, router])
 
   React.useEffect(() => {
-    if (!isHydrated || user?.role !== "ADMIN") return
+    if (!isHydrated || !isAdmin) return
     void load()
-  }, [isHydrated, user?.role, load])
+  }, [isHydrated, isAdmin, load])
 
   const exportCsv = () => {
     const header = ["created_at", "user_id", "email", "action", "resource_type", "ip", "details_json"]
@@ -165,7 +166,7 @@ export default function AdminAuditPage() {
     URL.revokeObjectURL(url)
   }
 
-  if (!isHydrated || user?.role !== "ADMIN") {
+  if (!isHydrated || !isAdmin) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-primary border-t-transparent" />

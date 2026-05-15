@@ -17,6 +17,7 @@ import { Pencil, Trash2, UserPlus, X } from "lucide-react"
 export default function AdminUsersPage() {
   const router = useRouter()
   const { user, isHydrated } = useAuthStore()
+  const isAdmin = (user?.role || "").toLowerCase() === "admin"
   const [rows, setRows] = React.useState<AdminUser[]>([])
   const [total, setTotal] = React.useState(0)
   const [loading, setLoading] = React.useState(true)
@@ -49,7 +50,7 @@ export default function AdminUsersPage() {
 
   React.useEffect(() => {
     if (!isHydrated) return
-    if (user?.role !== "ADMIN") {
+    if (!isAdmin) {
       toast.error("Admin access required")
       router.replace("/chat")
       return
@@ -65,12 +66,12 @@ export default function AdminUsersPage() {
   }, [isHydrated, user?.role, router])
 
   React.useEffect(() => {
-    if (!isHydrated || user?.role !== "ADMIN") return
+    if (!isHydrated || !isAdmin) return
     const t = window.setTimeout(() => void fetchUsers(), 300)
     return () => window.clearTimeout(t)
-  }, [isHydrated, user?.role, fetchUsers])
+  }, [isHydrated, isAdmin, fetchUsers])
 
-  if (!isHydrated || user?.role !== "ADMIN") {
+  if (!isHydrated || !isAdmin) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-primary border-t-transparent" />
