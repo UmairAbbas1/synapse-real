@@ -135,6 +135,20 @@ export function KnowledgeGraph3D() {
     queryFn: () => get<GraphData>('/admin/graph').catch(() => mockGraphData),
     initialData: mockGraphData,
   })
+  const [webglSupported, setWebglSupported] = React.useState<boolean | null>(null)
+
+  React.useEffect(() => {
+    const canvas = document.createElement("canvas")
+    try {
+      const gl =
+        canvas.getContext("webgl") ??
+        canvas.getContext("experimental-webgl") ??
+        canvas.getContext("webgl2")
+      setWebglSupported(gl !== null)
+    } catch {
+      setWebglSupported(false)
+    }
+  }, [])
 
   return (
     <div className="w-full h-full relative bg-bg-primary rounded-[12px] overflow-hidden border border-border-subtle">
@@ -143,17 +157,31 @@ export function KnowledgeGraph3D() {
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-primary border-t-transparent" />
         </div>
       )}
-      
-      <Canvas camera={{ position: [0, 20, 35], fov: 60 }}>
-        <color attach="background" args={["#0A0A0F"]} />
-        <GraphScene data={data} />
-        <OrbitControls 
-          enableDamping 
-          dampingFactor={0.05} 
-          minDistance={5} 
-          maxDistance={100} 
-        />
-      </Canvas>
+
+      {webglSupported === false ? (
+        <div className="flex h-full items-center justify-center px-6 text-center">
+          <div className="max-w-md rounded-[12px] border border-border-strong bg-surface-1 p-6">
+            <h3 className="text-lg font-bold text-text-primary">WebGL unavailable</h3>
+            <p className="mt-2 text-sm text-text-secondary">
+              This browser or graphics driver could not create a WebGL context, so the 3D graph cannot be rendered here.
+            </p>
+            <p className="mt-3 text-xs text-text-tertiary">
+              Try a different browser, enable hardware acceleration, or update the GPU driver.
+            </p>
+          </div>
+        </div>
+      ) : webglSupported === true ? (
+        <Canvas camera={{ position: [0, 20, 35], fov: 60 }}>
+          <color attach="background" args={["#0A0A0F"]} />
+          <GraphScene data={data} />
+          <OrbitControls 
+            enableDamping 
+            dampingFactor={0.05} 
+            minDistance={5} 
+            maxDistance={100} 
+          />
+        </Canvas>
+      ) : null}
 
       <div className="absolute bottom-6 left-6 bg-surface-1/80 backdrop-blur-md p-4 rounded-[8px] border border-border-strong">
         <h4 className="text-xs font-bold text-text-primary mb-2 uppercase tracking-wider">Legend</h4>
