@@ -136,11 +136,13 @@ const buildNodePositions = (nodes: GraphNode[], edges: GraphEdge[]) => {
   for (let iteration = 0; iteration < iterations; iteration += 1) {
     for (let i = 0; i < sortedNodes.length; i += 1) {
       const nodeA = sortedNodes[i]
+      if (!nodeA) continue
       const pointA = points.get(nodeA.id)
       if (!pointA) continue
 
       for (let j = i + 1; j < sortedNodes.length; j += 1) {
         const nodeB = sortedNodes[j]
+        if (!nodeB) continue
         const pointB = points.get(nodeB.id)
         if (!pointB) continue
 

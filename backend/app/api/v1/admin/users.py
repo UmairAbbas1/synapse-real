@@ -6,12 +6,14 @@ import uuid
 from datetime import datetime
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_auth_service, get_current_user
+from app.api.deps import get_audit_logger, get_auth_service, get_current_user
+from app.core.audit_logger import AuditLogger
 from app.core.auth import AuthService, hash_password
 from app.db.postgres import get_db_session as get_db
 from app.models.role import Role
@@ -104,9 +106,17 @@ async def list_users(
 @router.post("", response_model=UserAdminResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
     body: CreateUserRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     admin: CurrentUser = Depends(_require_admin),
+    audit: AuditLogger = Depends(get_audit_logger),
 ) -> UserAdminResponse:
+    existing = (
+        await db.execute(select(User.id).where(User.email == body.email, User.is_deleted == False))  # noqa: E712
+    ).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+
     role_row = (await db.execute(select(Role).where(Role.name == body.role_name))).scalar_one_or_none()
     if not role_row:
         raise HTTPException(status_code=400, detail="Unknown role")
@@ -120,8 +130,23 @@ async def create_user(
         is_active=True,
     )
     db.add(user)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered") from None
     await db.refresh(user, attribute_names=["role"])
+
+    ip = request.client.host if request.client else None
+    await audit.log(
+        user_id=admin.id,
+        action="create_user",
+        resource_type="user",
+        resource_id=str(user.id),
+        details={"email": user.email, "role": user.role.name if user.role else body.role_name},
+        ip_address=ip,
+    )
+
     return UserAdminResponse(
         id=str(user.id),
         email=user.email,
@@ -136,9 +161,11 @@ async def create_user(
 async def update_user(
     user_id: str,
     body: UpdateUserRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     admin: CurrentUser = Depends(_require_admin),
     auth: AuthService = Depends(get_auth_service),
+    audit: AuditLogger = Depends(get_audit_logger),
 ) -> UserAdminResponse:
     if admin.id == user_id and body.role_name is not None:
         raise HTTPException(status_code=400, detail="Cannot change own role")
@@ -146,6 +173,10 @@ async def update_user(
     user = await db.get(User, uuid.UUID(user_id))
     if not user:
         raise HTTPException(status_code=404, detail="Not found")
+
+    await db.refresh(user, attribute_names=["role"])
+    old_role = user.role.name if user.role else "USER"
+    ip = request.client.host if request.client else None
 
     if body.display_name is not None:
         given, family = _split_display(body.display_name)
@@ -162,6 +193,20 @@ async def update_user(
 
     await db.commit()
     await db.refresh(user, attribute_names=["role"])
+
+    new_role = user.role.name if user.role else "USER"
+    if body.role_name is not None and new_role != old_role:
+        await audit.log_role_change(admin.id, user_id, old_role, new_role, ip)
+    else:
+        await audit.log(
+            user_id=admin.id,
+            action="update_user",
+            resource_type="user",
+            resource_id=user_id,
+            details={"email": user.email, "is_active": user.is_active},
+            ip_address=ip,
+        )
+
     return UserAdminResponse(
         id=str(user.id),
         email=user.email,
@@ -175,9 +220,11 @@ async def update_user(
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response, response_model=None)
 async def delete_user(
     user_id: str,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     admin: CurrentUser = Depends(_require_admin),
     auth: AuthService = Depends(get_auth_service),
+    audit: AuditLogger = Depends(get_audit_logger),
 ) -> None:
     if admin.id == user_id:
         raise HTTPException(status_code=400, detail="Cannot delete self")
@@ -202,3 +249,13 @@ async def delete_user(
     user.soft_delete()
     await db.commit()
     await auth.revoke_all_sessions_for_user(user_id)
+
+    ip = request.client.host if request.client else None
+    await audit.log(
+        user_id=admin.id,
+        action="delete_user",
+        resource_type="user",
+        resource_id=user_id,
+        details={"email": user.email},
+        ip_address=ip,
+    )

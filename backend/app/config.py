@@ -67,7 +67,10 @@ class Settings(BaseSettings):
 
     # Embedding
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
-    EMBEDDING_DIM: int = 768
+    HF_CACHE_DIR: str = "/app/.cache/huggingface"
+    EMBEDDING_DIM: int = 384
+    OLLAMA_NUM_PREDICT: int = 512
+    OLLAMA_NUM_CTX: int = 2048
     CHUNK_SIZE: int = 512
     CHUNK_OVERLAP: int = 50
 

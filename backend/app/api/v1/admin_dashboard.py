@@ -87,7 +87,11 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
     for created_at, action, query_hash in today_audits:
         if created_at is None:
             continue
-        is_query = bool(query_hash) or action in {"execute_query", "query", "query_stream"}
+        is_query = bool(query_hash) or action in {
+            "execute_query",
+            "query",
+            "query_stream",
+        }
         if not is_query:
             continue
         queries_today += 1
@@ -98,21 +102,56 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
         for hour in range(24)
     ]
 
+    durations: list[float] = []
+    duration_rows = (
+        await db.execute(
+            select(AuditLog.details).where(
+                AuditLog.created_at >= today_start,
+                AuditLog.query_hash.isnot(None),
+            )
+        )
+    ).scalars().all()
+    for details in duration_rows:
+        if isinstance(details, dict):
+            raw = details.get("duration_ms")
+            if isinstance(raw, (int, float)):
+                durations.append(float(raw))
+    avg_response_time_ms = int(sum(durations) / len(durations)) if durations else 0
+
+    from fastapi import HTTPException
+
+    from app.api.v1.health import readiness_probe
+    from app.db.neo4j import get_neo4j_driver
+    from app.db.redis import get_redis_client
+
+    health_map = {
+        "postgres": "unhealthy",
+        "pgvector": "unhealthy",
+        "neo4j": "unhealthy",
+        "redis": "unhealthy",
+        "ollama": "unhealthy",
+    }
+    try:
+        readiness = await readiness_probe(
+            db=db,
+            neo_driver=get_neo4j_driver(),
+            redis=get_redis_client(),
+        )
+        for key in health_map:
+            ok = getattr(readiness, key, False)
+            health_map[key] = "healthy" if ok else "unhealthy"
+    except HTTPException:
+        pass
+
     return {
         "total_documents": total_documents,
         "document_trend": document_trend,
         "active_sources": active_sources,
         "queries_today": queries_today,
         "hourly_queries": hourly_queries,
-        "avg_response_time_ms": 0,
+        "avg_response_time_ms": avg_response_time_ms,
         "active_users": active_users,
-        "health": {
-            "postgres": "healthy",
-            "pgvector": "healthy",
-            "neo4j": "healthy",
-            "redis": "healthy",
-            "ollama": "healthy",
-        },
+        "health": health_map,
     }
 
 

@@ -61,7 +61,7 @@ indicate your uncertainty level in the response.
 class PromptBuilder:
     def __init__(self) -> None:
         self.encoder: _TokenEncoder | None = _DEFAULT_ENCODER
-        self.max_tokens = 3000
+        self.max_tokens = 1500
 
     def _count_tokens(self, text: str) -> int:
         if self.encoder:

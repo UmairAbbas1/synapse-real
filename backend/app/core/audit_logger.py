@@ -52,17 +52,23 @@ class AuditLogger:
         chunks: object,
         answer: str,
         ip_address: str | None,
+        duration_ms: float | None = None,
+        stream: bool = False,
     ) -> uuid.UUID:
         qh = hashlib.sha256(query_text.encode("utf-8")).hexdigest()
+        details: dict[str, object] = {
+            "chunks_count": len(chunks) if hasattr(chunks, "__len__") else 0,
+            "answer_preview": answer[:500],
+            "stream": stream,
+        }
+        if duration_ms is not None:
+            details["duration_ms"] = round(duration_ms, 2)
         return await self.log(
             user_id=user_id,
-            action="execute_query",
+            action="query_stream" if stream else "execute_query",
             resource_type="query",
             resource_id=None,
-            details={
-                "chunks_count": len(chunks) if hasattr(chunks, "__len__") else 0,
-                "answer_preview": answer[:500],
-            },
+            details=details,
             ip_address=ip_address,
             query_hash=qh,
         )

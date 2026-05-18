@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 import structlog
 from collections.abc import AsyncIterator
 
@@ -12,7 +13,7 @@ from app.core.expert_router import ExpertRouter
 from app.core.graph_search import GraphSearchService
 from app.core.llm_client import LLMClient, LLMUnavailableError
 from app.core.prompt_builder import PromptBuilder
-from app.core.vector_search import VectorSearchService
+from app.core.vector_search import RetrievedChunk, VectorSearchService
 from app.schemas.query import QueryMetadata, QueryResponse
 
 logger = structlog.get_logger(__name__)
@@ -37,29 +38,26 @@ class QueryEngine:
         self.prompt_builder = prompt_builder
         self.citation_builder = citation_builder
 
-    async def execute(self, query: str, user_permission_tags: list[str], user_id: str) -> QueryResponse:
-        log = logger.bind(user_id=user_id)
-
-        vector = self.embedding_svc.embed(query)
-        log.info("query_step_1_embed_complete", vector_dim=len(vector))
-
+    async def _retrieve(
+        self, query: str, user_permission_tags: list[str]
+    ) -> tuple[list[float], list[RetrievedChunk], list[dict[str, object]], float]:
+        vector = await self.embedding_svc.embed_async(query)
         chunks = await self.vector_svc.search(
             query_vector=vector,
             permission_tags=user_permission_tags,
             top_k=5,
         )
-        log.info("query_step_2_vector_search_complete", chunks_retrieved=len(chunks))
-
         max_sim = max((c.similarity for c in chunks), default=0.0)
-        low_confidence = len(chunks) == 0 or max_sim < 0.3
-        log.info(
-            "query_step_3_confidence_check",
-            top_score=max_sim,
-            low_confidence=low_confidence,
-        )
-
         graph_context = await self.graph_svc.enrich(query, chunks)
-        log.info("query_step_4_graph_enrichment_complete", graph_nodes=len(graph_context))
+        return vector, chunks, graph_context, max_sim
+
+    async def execute(self, query: str, user_permission_tags: list[str], user_id: str) -> QueryResponse:
+        log = logger.bind(user_id=user_id)
+        t0 = time.perf_counter()
+
+        _, chunks, graph_context, max_sim = await self._retrieve(query, user_permission_tags)
+        low_confidence = len(chunks) == 0 or max_sim < 0.3
+        log.info("query_retrieval_complete", chunks=len(chunks), top_score=max_sim)
 
         system_prompt, user_prompt = self.prompt_builder.build(
             query=query,
@@ -67,25 +65,19 @@ class QueryEngine:
             graph_context=graph_context,
             is_low_confidence=low_confidence,
         )
-        log.info("query_step_5_prompt_built")
 
         answer = ""
         llm_failed = False
         try:
             answer = await self.llm_client.generate(prompt=user_prompt, system_prompt=system_prompt)
-            log.info("query_step_6_llm_inference_complete", answer_length=len(answer))
         except LLMUnavailableError:
-            log.warning("query_step_6_llm_unavailable")
-            answer = ""
+            log.warning("query_llm_unavailable")
             llm_failed = True
 
         citations = self.citation_builder.build(chunks)
-        log.info("query_step_7_citations_built", citation_count=len(citations))
-
         expert = None
         if low_confidence and not llm_failed:
             expert = await self.expert_router.find_expert(query)
-        log.info("query_step_8_expert_routing_complete", expert_found=expert is not None)
 
         metadata = QueryMetadata(
             top_similarity_score=max_sim,
@@ -94,13 +86,18 @@ class QueryEngine:
             model=self.llm_client.model_name,
         )
 
-        return QueryResponse(
+        response = QueryResponse(
             answer=answer,
             citations=citations,
             expert=expert,
             is_low_confidence=low_confidence,
             metadata=metadata,
         )
+        log.info(
+            "query_execute_complete",
+            duration_ms=round((time.perf_counter() - t0) * 1000, 2),
+        )
+        return response
 
     async def execute_stream(
         self,
@@ -110,17 +107,8 @@ class QueryEngine:
     ) -> AsyncIterator[str]:
         log = logger.bind(user_id=user_id)
 
-        vector = self.embedding_svc.embed(query)
-        chunks = await self.vector_svc.search(
-            query_vector=vector,
-            permission_tags=user_permission_tags,
-            top_k=5,
-        )
-
-        max_sim = max((c.similarity for c in chunks), default=0.0)
+        _, chunks, graph_context, max_sim = await self._retrieve(query, user_permission_tags)
         low_confidence = len(chunks) == 0 or max_sim < 0.3
-
-        graph_context = await self.graph_svc.enrich(query, chunks)
 
         system_prompt, user_prompt = self.prompt_builder.build(
             query=query,
@@ -131,8 +119,10 @@ class QueryEngine:
 
         yield f"data: {json.dumps({'type': 'retrieval_done', 'chunk_count': len(chunks)})}\n\n"
 
+        answer_parts: list[str] = []
         try:
             async for token in self.llm_client.generate_stream(user_prompt, system_prompt):
+                answer_parts.append(token)
                 yield f"data: {json.dumps({'type': 'token', 'token': token})}\n\n"
         except LLMUnavailableError:
             log.warning("query_stream_llm_unavailable")
@@ -140,17 +130,12 @@ class QueryEngine:
             return
 
         citations = self.citation_builder.build(chunks)
-        expert = None
-        if low_confidence:
-            expert = await self.expert_router.find_expert(query)
-
         citations_payload = [c.model_dump(mode="json") for c in citations]
-        expert_payload = expert.model_dump(mode="json") if expert else None
 
         complete_payload: dict[str, object] = {
             "type": "complete",
             "citations": citations_payload,
-            "expert": expert_payload,
+            "expert": None,
             "confidence": max_sim,
         }
         yield f"data: {json.dumps(complete_payload)}\n\n"

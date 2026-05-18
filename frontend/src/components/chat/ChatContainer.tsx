@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { AnimatePresence, motion } from "framer-motion"
-import { Menu, MessageSquare, Plus, LogOut, PanelLeftClose, PanelLeft, ChatBubbleOutline } from "lucide-react"
+import { Menu, MessageSquare, Plus, LogOut, PanelLeftClose, PanelLeft } from "lucide-react"
 import { useChatStore, useChatThreads } from "@/store/chat-store"
 import { useAuthStore } from "@/store/auth-store"
 import { useAuth } from "@/lib/hooks/useAuth"
@@ -26,6 +26,8 @@ export function ChatContainer() {
   const selectSession = useChatStore((s) => s.selectSession)
   const activeSessionId = useChatStore((s) => s.activeSessionId)
   const sessions = useChatThreads()
+  const loadConversations = useChatStore((s) => s.loadConversations)
+  const isHydrating = useChatStore((s) => s.isHydrating)
   const threads = React.useMemo(
     () => sessions.map(({ id, title }) => ({ id, title })),
     [sessions]
@@ -35,6 +37,10 @@ export function ChatContainer() {
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const [sidebarOpen, setSidebarOpen] = React.useState(true)
   const [mobileNav, setMobileNav] = React.useState(false)
+
+  React.useEffect(() => {
+    void loadConversations()
+  }, [loadConversations])
 
   React.useEffect(() => {
     const el = scrollRef.current

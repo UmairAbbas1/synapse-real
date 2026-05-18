@@ -63,7 +63,7 @@ export default function AdminUsersPage() {
         setRoles([])
       }
     })()
-  }, [isHydrated, user?.role, router])
+  }, [isHydrated, isAdmin, router])
 
   React.useEffect(() => {
     if (!isHydrated || !isAdmin) return
@@ -203,7 +203,7 @@ export default function AdminUsersPage() {
 
       <DeleteUserDialog
         target={deleteUser}
-        currentUserId={user.id}
+        currentUserId={user?.id ?? ""}
         onClose={() => setDeleteUser(null)}
         onDeleted={() => {
           setDeleteUser(null)
@@ -238,6 +238,18 @@ function AddUserModal({
 
   const submit = async () => {
     setErr(null)
+    if (!email.trim() || !displayName.trim()) {
+      setErr("Email and display name are required")
+      return
+    }
+    if (password.length < 8) {
+      setErr("Password must be at least 8 characters")
+      return
+    }
+    if (!roles.some((r) => r.name === roleName)) {
+      setErr("Select a valid role")
+      return
+    }
     setBusy(true)
     try {
       await getApiClient().createUser({

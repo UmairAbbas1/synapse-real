@@ -35,10 +35,26 @@ def _raise_llm_unavailable(retry_state: RetryCallState) -> None:
 
 
 class LLMClient:
-    def __init__(self, base_url: str, model: str, timeout: int = 120) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        model: str,
+        timeout: int = 120,
+        num_predict: int = 512,
+        num_ctx: int = 2048,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.timeout = timeout
+        self.num_predict = num_predict
+        self.num_ctx = num_ctx
+
+    def _ollama_options(self) -> dict[str, object]:
+        return {
+            "num_predict": self.num_predict,
+            "num_ctx": self.num_ctx,
+            "temperature": 0.3,
+        }
 
     @property
     def model_name(self) -> str:
@@ -57,6 +73,7 @@ class LLMClient:
             "model": self.model,
             "prompt": prompt,
             "stream": False,
+            "options": self._ollama_options(),
         }
         if system_prompt:
             payload["system"] = system_prompt
@@ -97,11 +114,12 @@ class LLMClient:
             "model": self.model,
             "prompt": prompt,
             "stream": True,
+            "options": self._ollama_options(),
         }
         if system_prompt:
             payload["system"] = system_prompt
 
-        for attempt in range(1, 4):
+        for attempt in range(1, 3):
             try:
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
                     async with client.stream(
@@ -128,8 +146,8 @@ class LLMClient:
                     attempt=attempt,
                     error=str(exc),
                 )
-                if attempt < 3:
-                    await asyncio.sleep(min(30.0, 2.0**attempt))
+                if attempt < 2:
+                    await asyncio.sleep(min(8.0, 2.0**attempt))
                     continue
                 logger.error("ollama_stream_exhausted_retries", error=str(exc))
                 raise LLMUnavailableError() from exc

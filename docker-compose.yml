@@ -2,18 +2,34 @@
 # docker-compose.prod.yml). Matches Section 15 minus nginx, restart policies,
 # and Ollama GPU reservation (those come from docker-compose.prod.yml).
 
+# Fix model_cache volume permissions without rebuilding images (runs as root, drops to synapse).
+x-backend-init: &backend-init
+  user: "0:0"
+  entrypoint: ["/bin/sh", "-ec"]
+
 services:
   synapse-api:
+    <<: *backend-init
     build:
       context: ./backend
       dockerfile: Dockerfile
     env_file: .env
     ports:
       - "8000:8000"
-    command: ["/opt/venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--log-level", "debug"]
+    command:
+      - |
+        mkdir -p /app/.cache/huggingface/hub /app/.cache/sentence_transformers
+        chown -R 1001:1001 /app/.cache
+        exec runuser -u synapse -- /opt/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level debug
     volumes:
+      - model_cache:/app/.cache
       - ./backend/app:/app/app
     environment:
+      - HF_HOME=/app/.cache/huggingface
+      - HUGGINGFACE_HUB_CACHE=/app/.cache/huggingface/hub
+      - TRANSFORMERS_CACHE=/app/.cache/huggingface/hub
+      - SENTENCE_TRANSFORMERS_HOME=/app/.cache/sentence_transformers
+      - HOME=/app
       - POSTGRES_HOST=postgres
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
@@ -50,11 +66,19 @@ services:
       - synapse-api
 
   synapse-worker:
+    <<: *backend-init
     build:
       context: ./backend
       dockerfile: Dockerfile.worker
     env_file: .env
+    volumes:
+      - model_cache:/app/.cache
     environment:
+      - HF_HOME=/app/.cache/huggingface
+      - HUGGINGFACE_HUB_CACHE=/app/.cache/huggingface/hub
+      - TRANSFORMERS_CACHE=/app/.cache/huggingface/hub
+      - SENTENCE_TRANSFORMERS_HOME=/app/.cache/sentence_transformers
+      - HOME=/app
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
       - SECRET_KEY=dev-secret-key-change-in-prod-32chars-ok
@@ -62,18 +86,30 @@ services:
       - NEO4J_PASSWORD=synapse_dev_pass
       - FERNET_KEY=ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=
       - DATABASE_URL=postgresql+psycopg://synapse:synapse_dev_pass@postgres:5432/synapse
-    command: celery -A app.workers.celery_app worker -l info -c 4
+    command:
+      - |
+        mkdir -p /app/.cache/huggingface/hub /app/.cache/sentence_transformers
+        chown -R 1001:1001 /app/.cache
+        exec runuser -u synapse -- celery -A app.workers.celery_app worker -l info -c 4
     depends_on:
       - redis
       - postgres
       - neo4j
 
   synapse-beat:
+    <<: *backend-init
     build:
       context: ./backend
       dockerfile: Dockerfile.worker
     env_file: .env
+    volumes:
+      - model_cache:/app/.cache
     environment:
+      - HF_HOME=/app/.cache/huggingface
+      - HUGGINGFACE_HUB_CACHE=/app/.cache/huggingface/hub
+      - TRANSFORMERS_CACHE=/app/.cache/huggingface/hub
+      - SENTENCE_TRANSFORMERS_HOME=/app/.cache/sentence_transformers
+      - HOME=/app
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
       - SECRET_KEY=dev-secret-key-change-in-prod-32chars-ok
@@ -81,7 +117,11 @@ services:
       - NEO4J_PASSWORD=synapse_dev_pass
       - FERNET_KEY=ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=
       - DATABASE_URL=postgresql+psycopg://synapse:synapse_dev_pass@postgres:5432/synapse
-    command: celery -A app.workers.celery_app beat -l info
+    command:
+      - |
+        mkdir -p /app/.cache/huggingface/hub /app/.cache/sentence_transformers
+        chown -R 1001:1001 /app/.cache
+        exec runuser -u synapse -- celery -A app.workers.celery_app beat -l info
     depends_on:
       - redis
 
@@ -130,16 +170,30 @@ services:
       - ollama_data:/root/.ollama
 
   flower:
+    <<: *backend-init
     build:
       context: ./backend
       dockerfile: Dockerfile.worker
-    command: celery -A app.workers.celery_app flower --port=5555
+    volumes:
+      - model_cache:/app/.cache
+    environment:
+      - HF_HOME=/app/.cache/huggingface
+      - HUGGINGFACE_HUB_CACHE=/app/.cache/huggingface/hub
+      - TRANSFORMERS_CACHE=/app/.cache/huggingface/hub
+      - SENTENCE_TRANSFORMERS_HOME=/app/.cache/sentence_transformers
+      - HOME=/app
+    command:
+      - |
+        mkdir -p /app/.cache/huggingface/hub /app/.cache/sentence_transformers
+        chown -R 1001:1001 /app/.cache
+        exec runuser -u synapse -- celery -A app.workers.celery_app flower --port=5555
     ports:
       - "5555:5555"
     depends_on:
       - redis
 
 volumes:
+  model_cache:
   neo4j_data:
   postgres_data:
   redis_data:

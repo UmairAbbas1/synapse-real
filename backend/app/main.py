@@ -42,6 +42,8 @@ async def lifespan(app: FastAPI):
         base_url=settings.OLLAMA_BASE_URL,
         model=settings.OLLAMA_MODEL,
         timeout=settings.OLLAMA_TIMEOUT,
+        num_predict=settings.OLLAMA_NUM_PREDICT,
+        num_ctx=settings.OLLAMA_NUM_CTX,
     )
     app.state.expert_router = ExpertRouter(get_neo4j_driver())
     app.state.prompt_builder = PromptBuilder()

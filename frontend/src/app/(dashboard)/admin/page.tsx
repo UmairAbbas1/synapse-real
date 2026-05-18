@@ -16,34 +16,38 @@ interface DashboardStats {
   health: SystemHealth
 }
 
-const fallbackData: DashboardStats = {
-  total_documents: 4200000,
-  document_trend: Array.from({ length: 7 }, (_, i) => ({ date: `Day ${i + 1}`, count: 10000 + i * 500 })),
-  active_sources: 4,
-  queries_today: 1240,
-  hourly_queries: Array.from({ length: 24 }, (_, i) => ({ hour: `${i}:00`, count: Math.floor(Math.random() * 100) })),
-  avg_response_time_ms: 1200,
-  active_users: 24,
-  health: { postgres: "healthy", pgvector: "healthy", neo4j: "healthy", redis: "healthy", ollama: "healthy" }
-}
-
-function normalizeDashboardStats(raw: any): DashboardStats {
-  return raw || fallbackData
+function normalizeDashboardStats(raw: unknown): DashboardStats {
+  if (!raw || typeof raw !== "object") {
+    throw new Error("Invalid dashboard response")
+  }
+  const r = raw as Record<string, unknown>
+  return {
+    total_documents: Number(r.total_documents ?? 0),
+    document_trend: Array.isArray(r.document_trend)
+      ? (r.document_trend as DashboardStats["document_trend"])
+      : [],
+    active_sources: Number(r.active_sources ?? 0),
+    queries_today: Number(r.queries_today ?? 0),
+    hourly_queries: Array.isArray(r.hourly_queries)
+      ? (r.hourly_queries as DashboardStats["hourly_queries"])
+      : [],
+    avg_response_time_ms: Number(r.avg_response_time_ms ?? 0),
+    active_users: Number(r.active_users ?? 0),
+    health: (r.health as SystemHealth) ?? {
+      postgres: "unhealthy",
+      pgvector: "unhealthy",
+      neo4j: "unhealthy",
+      redis: "unhealthy",
+      ollama: "unhealthy",
+    },
+  }
 }
 
 export default function AdminDashboard() {
-  const { data } = useQuery({
+  const { data, isError, error, isLoading } = useQuery({
     queryKey: ["adminStats"],
-    queryFn: async () => {
-      try {
-        const raw = await get<any>("/admin/stats")
-        return normalizeDashboardStats(raw)
-      } catch {
-        return fallbackData
-      }
-    },
-    refetchInterval: 30000,
-    initialData: fallbackData,
+    queryFn: async () => normalizeDashboardStats(await get<unknown>("/admin/stats")),
+    refetchInterval: 15000,
   })
 
   // Format numbers for display (e.g. 4200000 -> 4.2M)
@@ -51,6 +55,24 @@ export default function AdminDashboard() {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
     return num.toString();
+  }
+
+  if (isLoading && !data) {
+    return (
+      <div className="flex-1 w-full max-w-[1200px] mx-auto py-8 px-margin-mobile">
+        <p className="text-sm text-on-surface-variant">Loading live metrics…</p>
+      </div>
+    )
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="flex-1 w-full max-w-[1200px] mx-auto py-8 px-margin-mobile">
+        <p className="text-sm text-status-error">
+          Could not load dashboard: {error instanceof Error ? error.message : "Unknown error"}
+        </p>
+      </div>
+    )
   }
 
   return (

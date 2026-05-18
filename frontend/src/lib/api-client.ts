@@ -287,10 +287,7 @@ export class ApiClient {
 
     if (!res.ok) {
       const errBody = await safeJson(res)
-      const msg =
-        isRecord(errBody) && typeof errBody["detail"] === "string"
-          ? errBody["detail"]
-          : `Request failed (${String(res.status)})`
+      const msg = formatApiError(errBody, `Request failed (${String(res.status)})`)
       throw new ApiError(msg, res.status, errBody)
     }
 
@@ -357,11 +354,7 @@ export class ApiClient {
 
     if (!res.ok) {
       const errBody = await safeJson(res)
-      const msg =
-        isRecord(errBody) && typeof errBody["detail"] === "string"
-          ? errBody["detail"]
-          : `Stream failed (${String(res.status)})`
-      callbacks.onError(msg)
+      callbacks.onError(formatApiError(errBody, `Stream failed (${String(res.status)})`))
       return
     }
 
@@ -507,6 +500,47 @@ export class ApiClient {
     return this.request<Role[]>("/admin/roles", { method: "GET" })
   }
 
+  async listConversations(): Promise<ConversationSummary[]> {
+    return this.request<ConversationSummary[]>("/conversations", { method: "GET" })
+  }
+
+  async createConversation(title?: string): Promise<ConversationDetail> {
+    return this.request<ConversationDetail>("/conversations", {
+      method: "POST",
+      body: JSON.stringify({ title: title ?? "New conversation" }),
+    })
+  }
+
+  async getConversation(id: string): Promise<ConversationDetail> {
+    return this.request<ConversationDetail>(`/conversations/${encodeURIComponent(id)}`, {
+      method: "GET",
+    })
+  }
+
+  async updateConversationTitle(id: string, title: string): Promise<ConversationSummary> {
+    return this.request<ConversationSummary>(`/conversations/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ title }),
+    })
+  }
+
+  async appendConversationMessage(
+    conversationId: string,
+    payload: {
+      role: "user" | "assistant"
+      content: string
+      extra?: Record<string, JsonValue> | null
+    }
+  ): Promise<ConversationMessage> {
+    return this.request<ConversationMessage>(
+      `/conversations/${encodeURIComponent(conversationId)}/messages`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    )
+  }
+
   async listAuditLogs(params?: {
     user_id?: string
     action?: string
@@ -525,6 +559,58 @@ export class ApiClient {
       method: "GET",
     })
   }
+}
+
+export function formatApiError(errBody: unknown, fallback: string): string {
+  if (typeof errBody === "string" && errBody.trim()) {
+    return errBody
+  }
+  if (!isRecord(errBody)) {
+    return fallback
+  }
+  const detail = errBody["detail"]
+  if (typeof detail === "string" && detail.trim()) {
+    return detail
+  }
+  if (Array.isArray(detail)) {
+    const parts = detail
+      .map((item) => {
+        if (!isRecord(item)) return null
+        const msg = item["msg"]
+        const loc = item["loc"]
+        if (typeof msg === "string" && Array.isArray(loc)) {
+          return `${loc.filter((x) => x !== "body").join(".")}: ${msg}`
+        }
+        return typeof msg === "string" ? msg : null
+      })
+      .filter((x): x is string => Boolean(x))
+    if (parts.length > 0) {
+      return parts.join("; ")
+    }
+  }
+  return fallback
+}
+
+export interface ConversationSummary {
+  id: string
+  title: string
+  updated_at: string
+  message_count: number
+}
+
+export interface ConversationMessage {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  extra: Record<string, JsonValue> | null
+  created_at: string
+}
+
+export interface ConversationDetail {
+  id: string
+  title: string
+  updated_at: string
+  messages: ConversationMessage[]
 }
 
 async function safeJson(res: Response): Promise<unknown> {

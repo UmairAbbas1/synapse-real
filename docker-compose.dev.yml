@@ -9,18 +9,19 @@ services:
       - ./backend/.env.dev
     environment:
       DEBUG: "true"
+      HF_HOME: /app/.cache/huggingface
+      HUGGINGFACE_HUB_CACHE: /app/.cache/huggingface/hub
+      TRANSFORMERS_CACHE: /app/.cache/huggingface/hub
+      SENTENCE_TRANSFORMERS_HOME: /app/.cache/sentence_transformers
+      HOME: /app
     volumes:
       - ./backend:/app
+      - model_cache:/app/.cache
     command:
-      [
-        "uvicorn",
-        "app.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+      - |
+        mkdir -p /app/.cache/huggingface/hub /app/.cache/sentence_transformers
+        chown -R 1001:1001 /app/.cache
+        exec runuser -u synapse -- /opt/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   synapse-frontend:
     environment:
@@ -36,20 +37,41 @@ services:
   synapse-worker:
     env_file:
       - ./backend/.env.dev
+    environment:
+      HF_HOME: /app/.cache/huggingface
+      HUGGINGFACE_HUB_CACHE: /app/.cache/huggingface/hub
+      TRANSFORMERS_CACHE: /app/.cache/huggingface/hub
+      SENTENCE_TRANSFORMERS_HOME: /app/.cache/sentence_transformers
+      HOME: /app
     volumes:
       - ./backend:/app
+      - model_cache:/app/.cache
 
   synapse-beat:
     env_file:
       - ./backend/.env.dev
+    environment:
+      HF_HOME: /app/.cache/huggingface
+      HUGGINGFACE_HUB_CACHE: /app/.cache/huggingface/hub
+      TRANSFORMERS_CACHE: /app/.cache/huggingface/hub
+      SENTENCE_TRANSFORMERS_HOME: /app/.cache/sentence_transformers
+      HOME: /app
     volumes:
       - ./backend:/app
+      - model_cache:/app/.cache
 
   flower:
     env_file:
       - ./backend/.env.dev
+    environment:
+      HF_HOME: /app/.cache/huggingface
+      HUGGINGFACE_HUB_CACHE: /app/.cache/huggingface/hub
+      TRANSFORMERS_CACHE: /app/.cache/huggingface/hub
+      SENTENCE_TRANSFORMERS_HOME: /app/.cache/sentence_transformers
+      HOME: /app
     volumes:
       - ./backend:/app
+      - model_cache:/app/.cache
     ports:
       - "5555:5555"
 
@@ -72,5 +94,6 @@ services:
       - "11434:11434"
 
 volumes:
+  model_cache:
   frontend_node_modules:
   frontend_next:

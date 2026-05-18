@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
+from pathlib import Path
+
 import structlog
 from sentence_transformers import SentenceTransformer
 
@@ -19,8 +22,13 @@ def load_embedding_model() -> None:
     
     start_time = time.perf_counter()
     logger.info("embedding_model_load_started", model=settings.EMBEDDING_MODEL)
-    
-    _model = SentenceTransformer(settings.EMBEDDING_MODEL)
+
+    cache_dir = Path(settings.HF_CACHE_DIR)
+
+    _model = SentenceTransformer(
+        settings.EMBEDDING_MODEL,
+        cache_folder=str(cache_dir),
+    )
     
     elapsed = time.perf_counter() - start_time
     logger.info(
@@ -47,6 +55,10 @@ class EmbeddingService:
     def embed(self, text: str) -> list[float]:
         """Alias for encode — RAG pipeline entrypoint."""
         return self.encode(text)
+
+    async def embed_async(self, text: str) -> list[float]:
+        """Run encoding off the event loop."""
+        return await asyncio.to_thread(self.embed, text)
 
     def encode_batch(self, texts: list[str]) -> list[list[float]]:
         """Convert a batch of text strings into normalized embedding vectors."""
